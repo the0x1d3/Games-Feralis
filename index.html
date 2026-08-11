@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Feralis</title>
+    <meta
+      name="description"
+      content="Feralis — cattura creature, assegnale al lavoro, guarda la radura produrre anche mentre non giochi."
+    />
+    <meta name="color-scheme" content="dark" />
+    <!-- Percorso relativo, mai assoluto: il gioco vive sotto /Games-Feralis/ su Pages
+         ma deve restare spostabile su un'altra origine senza toccare il codice. -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-canvas" role="img" aria-label="Feralis"></div>
+      <main id="ui-overlay"></main>
+    </div>
+    <noscript>
+      <p>Feralis ha bisogno di JavaScript per funzionare.</p>
+      <p>Feralis needs JavaScript to run.</p>
+    </noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["vite/client"],
+
+    /* Rigore: vedi CLAUDE.md regola "niente any, niente @ts-ignore". */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    /* Gli alias vanno tenuti allineati a `resolve.alias` in vite.config.ts. */
+    "baseUrl": ".",
+    "paths": {
+      "@domain/*": ["src/domain/*"],
+      "@state/*": ["src/state/*"],
+      "@engine/*": ["src/engine/*"],
+      "@scenes/*": ["src/scenes/*"],
+      "@save/*": ["src/save/*"],
+      "@ui/*": ["src/ui/*"],
+      "@i18n/*": ["src/i18n/*"],
+      "@data/*": ["data/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "data/**/*.json"]
+}

@@ -1,0 +1,17 @@
+{
+  "app.title": "Feralis",
+  "app.tagline": "Nothing is ever truly tamed.",
+  "boot.phase": "Phase 0 — Foundations",
+  "boot.hint": "The explorable world, the day/night cycle and saving arrive in Phase 1.",
+  "boot.canvasAlive": "The canvas is alive: Phaser is drawing this panel.",
+  "diag.title": "Diagnostics",
+  "diag.seed": "Run seed",
+  "diag.stream": "Stream “world”, first 5 values",
+  "diag.baseUrl": "Base URL",
+  "diag.reroll": "Reroll the seed",
+  "diag.explain": "Same seed, same sequence: that is what makes the tests reproducible.",
+  "ui.language": "Language",
+  "ui.skipToContent": "Skip to content",
+  "locale.it": "Italiano",
+  "locale.en": "English"
+}

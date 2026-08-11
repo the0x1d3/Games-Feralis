@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# File temporanei scritti da scripts/boundaries.test.ts: normalmente vengono
+# cancellati subito, ma se un test crasha non devono finire in un commit.
+src/**/__boundary-probe.ts
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.local
+.env
+.env.*
+!.env.example

@@ -1,0 +1,242 @@
+/*
+ * Fondamenta di stile.
+ *
+ * Due impegni del PDR §7.2 sono gia' incisi qui, perche' aggiungerli dopo
+ * significa rifare il CSS: la scala del testo e' una variabile (100/125/150%
+ * diventera' un'opzione, non una riscrittura) e nessuna informazione viaggia
+ * solo con il colore.
+ */
+
+:root {
+  --text-scale: 1;
+
+  --bg: #0b1210;
+  --bg-panel: rgba(18, 32, 26, 0.82);
+  --border: #2c5a43;
+  --border-strong: #3f8a63;
+  --fg: #eaf6ef;
+  --fg-muted: #9dc3ad;
+  --accent: #6fd39b;
+  --focus: #ffd479;
+
+  --radius: 10px;
+  --space: 1rem;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at 50% 0%, #142a20 0%, var(--bg) 65%);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: calc(1rem * var(--text-scale));
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space);
+  min-height: 100%;
+  padding: var(--space);
+}
+
+#game-canvas {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+#game-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#ui-overlay {
+  width: 100%;
+  max-width: 640px;
+}
+
+/* ---------- Pannello ---------- */
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 1.25);
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 1.75em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panel__tagline {
+  margin: 0.25em 0 0;
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.panel__badge {
+  display: inline-block;
+  margin: var(--space) 0 0;
+  padding: 0.2em 0.7em;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel__hint {
+  margin: 0.6em 0 0;
+  color: var(--fg-muted);
+  font-size: 0.9em;
+}
+
+/* ---------- Diagnostica ---------- */
+
+.diag {
+  margin-top: calc(var(--space) * 1.25);
+  padding-top: var(--space);
+  border-top: 1px dashed var(--border);
+}
+
+.diag__title {
+  margin: 0 0 0.5em;
+  font-size: 0.75em;
+  color: var(--fg-muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.diag__list {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) 1fr;
+  gap: 0.35em var(--space);
+  margin: 0 0 var(--space);
+}
+
+.diag__term {
+  color: var(--fg-muted);
+  font-size: 0.85em;
+}
+
+.diag__value {
+  margin: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+.diag__explain {
+  margin: 0.75em 0 0;
+  color: var(--fg-muted);
+  font-size: 0.8em;
+}
+
+.langs {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+/* ---------- Controlli ---------- */
+
+.button {
+  /* PDR §7.3: hit target >= 44px, deciso ora e non "quando faremo il mobile". */
+  min-height: 44px;
+  padding: 0 1.1em;
+  background: var(--border-strong);
+  color: #06120c;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+}
+
+.button:hover {
+  background: var(--accent);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--border);
+  font-weight: 500;
+}
+
+.button--ghost:hover {
+  background: rgba(111, 211, 155, 0.12);
+}
+
+/*
+ * La lingua attiva non e' segnalata SOLO dal colore: c'e' anche il segno "•"
+ * e lo stato aria-pressed. E' la regola di §7.2, applicata al primo controllo
+ * del progetto per non doverla ricordare al centesimo.
+ */
+.button--ghost[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.button--ghost[aria-pressed='true']::before {
+  content: '\2022\00a0';
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus-visible {
+  left: var(--space);
+  top: var(--space);
+  z-index: 10;
+  padding: 0.5em 1em;
+  background: var(--focus);
+  color: #06120c;
+  border-radius: var(--radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

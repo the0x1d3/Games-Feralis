@@ -1,0 +1,17 @@
+{
+  "app.title": "Feralis",
+  "app.tagline": "Nulla si doma davvero.",
+  "boot.phase": "Fase 0 — Fondamenta",
+  "boot.hint": "Il mondo esplorabile, il ciclo giorno/notte e il salvataggio arrivano nella Fase 1.",
+  "boot.canvasAlive": "Il canvas è vivo: Phaser sta disegnando questo riquadro.",
+  "diag.title": "Diagnostica",
+  "diag.seed": "Seme della partita",
+  "diag.stream": "Stream «mondo», primi 5 valori",
+  "diag.baseUrl": "Base URL",
+  "diag.reroll": "Rigenera il seme",
+  "diag.explain": "Stesso seme, stessa sequenza: è la garanzia che rende i test riproducibili.",
+  "ui.language": "Lingua",
+  "ui.skipToContent": "Vai al contenuto",
+  "locale.it": "Italiano",
+  "locale.en": "English"
+}
