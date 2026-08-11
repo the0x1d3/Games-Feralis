@@ -1,17 +1,33 @@
 {
   "app.title": "Feralis",
   "app.tagline": "Nothing is ever truly tamed.",
-  "boot.phase": "Phase 0 — Foundations",
-  "boot.hint": "The explorable world, the day/night cycle and saving arrive in Phase 1.",
-  "boot.canvasAlive": "The canvas is alive: Phaser is drawing this panel.",
-  "diag.title": "Diagnostics",
-  "diag.seed": "Run seed",
-  "diag.stream": "Stream “world”, first 5 values",
-  "diag.baseUrl": "Base URL",
-  "diag.reroll": "Reroll the seed",
-  "diag.explain": "Same seed, same sequence: that is what makes the tests reproducible.",
-  "ui.language": "Language",
+
+  "hud.zone": "Zone",
+  "hud.time": "Time",
+  "hud.dayAndTime": "Day {day} · {time}",
+  "hud.phase.dawn": "Dawn",
+  "hud.phase.day": "Day",
+  "hud.phase.dusk": "Dusk",
+  "hud.phase.night": "Night",
+  "hud.saved": "Game saved",
+  "hud.saving": "Saving…",
+  "hud.controls": "Arrows or WASD to move · E or Space to interact · The game saves itself",
+
+  "storage.fallback": "This browser will not grant persistent storage: your game is kept in local memory and may be lost if you clear the site data.",
+
+  "dialog.close": "Close",
+
+  "world.zone.costa": "Coast",
+  "world.zone.bosco": "Woods",
+  "world.zone.altopiano": "Highland",
+
+  "world.sign.beach": "You woke up here, with no memories and no Ferals. The path north leads into the woods.",
+  "world.sign.totem": "A wooden deck, laid by someone before you. It would make a good Clearing, once you know how to build one.",
+  "world.sign.forest": "Dense woods. Trees cannot be crossed, and neither can boulders: you will need Ferals with the right work skills.",
+  "world.sign.highland": "Highland. The air turns cold and the cliffs close the way: from here on you will need equipment.",
+
   "ui.skipToContent": "Skip to content",
+  "ui.language": "Language",
   "locale.it": "Italiano",
   "locale.en": "English"
 }

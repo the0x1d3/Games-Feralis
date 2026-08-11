@@ -1,7 +1,7 @@
 /*
  * Fondamenta di stile.
  *
- * Due impegni del PDR §7.2 sono gia' incisi qui, perche' aggiungerli dopo
+ * Due impegni del PDR §7.2 sono incisi qui, perche' aggiungerli dopo
  * significa rifare il CSS: la scala del testo e' una variabile (100/125/150%
  * diventera' un'opzione, non una riscrittura) e nessuna informazione viaggia
  * solo con il colore.
@@ -18,6 +18,7 @@
   --fg-muted: #9dc3ad;
   --accent: #6fd39b;
   --focus: #ffd479;
+  --warn: #ffd479;
 
   --radius: 10px;
   --space: 1rem;
@@ -48,18 +49,19 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space);
+  gap: 0.75rem;
   min-height: 100%;
   padding: var(--space);
 }
 
 #game-canvas {
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   aspect-ratio: 4 / 3;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  background: #0d1411;
 }
 
 #game-canvas canvas {
@@ -70,86 +72,123 @@ body {
 
 #ui-overlay {
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
 }
 
-/* ---------- Pannello ---------- */
+/* ---------- Testata ---------- */
 
-.panel {
+.brand {
+  width: 100%;
+  max-width: 720px;
+  text-align: center;
+}
+
+.brand__title {
+  margin: 0;
+  font-size: 1.35em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.brand__tagline {
+  margin: 0.1em 0 0;
+  color: var(--fg-muted);
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+/* ---------- HUD ---------- */
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.6rem 0.9rem;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: calc(var(--space) * 1.25);
 }
 
-.panel__title {
-  margin: 0;
-  font-size: 1.75em;
+.hud__block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.hud__label {
+  color: var(--fg-muted);
+  font-size: 0.7em;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.panel__tagline {
-  margin: 0.25em 0 0;
-  color: var(--fg-muted);
-  font-style: italic;
+.hud__value {
+  font-size: 0.95em;
+  font-variant-numeric: tabular-nums;
 }
 
-.panel__badge {
-  display: inline-block;
-  margin: var(--space) 0 0;
-  padding: 0.2em 0.7em;
+/*
+ * La fase del giorno non e' segnalata SOLO dal colore: c'e' il nome scritto,
+ * e il colore lo accompagna. E' la regola di §7.2.
+ */
+.hud__phase {
+  padding: 0.15em 0.7em;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  color: var(--accent);
-  font-size: 0.8em;
+  font-size: 0.75em;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.panel__hint {
-  margin: 0.6em 0 0;
+.hud__phase[data-phase='dawn'] {
+  color: #ffb98a;
+  border-color: #ffb98a;
+}
+
+.hud__phase[data-phase='day'] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.hud__phase[data-phase='dusk'] {
+  color: #ffa06a;
+  border-color: #ffa06a;
+}
+
+.hud__phase[data-phase='night'] {
+  color: #9fb6ff;
+  border-color: #9fb6ff;
+}
+
+.hud__save {
+  margin-left: auto;
   color: var(--fg-muted);
-  font-size: 0.9em;
-}
-
-/* ---------- Diagnostica ---------- */
-
-.diag {
-  margin-top: calc(var(--space) * 1.25);
-  padding-top: var(--space);
-  border-top: 1px dashed var(--border);
-}
-
-.diag__title {
-  margin: 0 0 0.5em;
   font-size: 0.75em;
-  color: var(--fg-muted);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
-.diag__list {
-  display: grid;
-  grid-template-columns: minmax(9rem, auto) 1fr;
-  gap: 0.35em var(--space);
-  margin: 0 0 var(--space);
-}
+/* ---------- Avvisi, suggerimenti, lingua ---------- */
 
-.diag__term {
-  color: var(--fg-muted);
+.warning {
+  margin: 0.6rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  color: var(--warn);
   font-size: 0.85em;
 }
 
-.diag__value {
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.hint {
   margin: 0;
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 0.85em;
-  overflow-wrap: anywhere;
-}
-
-.diag__explain {
-  margin: 0.75em 0 0;
   color: var(--fg-muted);
   font-size: 0.8em;
 }
@@ -158,6 +197,33 @@ body {
   display: flex;
   gap: 0.5em;
   flex-wrap: wrap;
+}
+
+/* ---------- Dialogo dei cartelli ---------- */
+
+.dialog {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+}
+
+.dialog[hidden] {
+  display: none;
+}
+
+.dialog__text {
+  margin: 0;
+  flex: 1;
+}
+
+.dialog__close {
+  flex: none;
 }
 
 /* ---------- Controlli ---------- */
@@ -197,11 +263,6 @@ body {
   background: rgba(111, 211, 155, 0.12);
 }
 
-/*
- * La lingua attiva non e' segnalata SOLO dal colore: c'e' anche il segno "•"
- * e lo stato aria-pressed. E' la regola di §7.2, applicata al primo controllo
- * del progetto per non doverla ricordare al centesimo.
- */
 .button--ghost[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--accent);

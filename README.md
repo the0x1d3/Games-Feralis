@@ -18,10 +18,14 @@ collezionare doppioni: è cercare lo strumento giusto.
 
 ## Stato
 
-**Fase 0 — Fondamenta.** Toolchain, confini architetturali, RNG deterministico, i18n,
-deploy automatico. Il mondo esplorabile arriva nella Fase 1.
+**Fase 1 — Mondo esplorabile.** Tre zone percorribili (Costa, Bosco, Altopiano),
+movimento a 8 direzioni con collisioni, ciclo giorno/notte da 24 minuti reali,
+cartelli da leggere, salvataggio automatico che sopravvive alla ricarica.
 
-La roadmap completa è in [`docs/PDR.md`](docs/PDR.md) §7.
+Combattimento e cattura arrivano nella Fase 2. La roadmap completa è in
+[`docs/PDR.md`](docs/PDR.md) §7.
+
+Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire.
 
 ## Sviluppo
 

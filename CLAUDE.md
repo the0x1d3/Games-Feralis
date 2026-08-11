@@ -40,26 +40,44 @@ Le correzioni già applicate al PDR originale sono elencate nella sua §0 (Errat
 ## Struttura
 
 ```
-data/        contenuto di gioco in JSON, versionato, validato in CI
-scripts/     guardie di CI: validate-data, size-check, boundaries.test, balance-sim
-src/domain/  ⭐ logica pura, zero dipendenze impure — è dove vive il gioco
-src/engine/  l'unica cartella che importa Phaser
-src/scenes/  viste: leggono lo stato e disegnano. Nessuna regola di gioco.
-src/state/   store, azioni, selettori, migrazioni, orologio di sistema
-src/save/    serializzazione, storage, codici di scambio
-src/ui/      pannelli DOM sopra il canvas
-src/i18n/    traduzioni
-docs/ADR/    una decisione architetturale per file
+data/maps/     mappe in formato Tiled (generate, vedi ADR 0005)
+data/world/    tiles.json (regole dei tile) e world.json (tempo, giocatore, save)
+data/locales/  traduzioni IT/EN
+scripts/       guardie di CI + generatori: validate-data, size-check,
+               boundaries.test, gen-assets, author-maps, balance-sim
+src/domain/    ⭐ logica pura, zero dipendenze impure — è dove vive il gioco
+  world/       tempo, collisioni, movimento, interazione, lettura Tiled
+src/engine/    l'unica cartella che importa Phaser
+src/scenes/    viste: leggono lo stato e disegnano. Nessuna regola di gioco.
+src/state/     store, riduttori, migrazioni, sessione, caricamento mondo
+src/save/      serializzazione, storage, codici di scambio
+src/ui/        pannelli DOM sopra il canvas (HUD, dialoghi)
+src/i18n/      traduzioni
+docs/ADR/      una decisione architetturale per file
 ```
+
+## Come si verifica il gioco senza browser
+
+Phaser mette in pausa il game loop quando la pagina non è visibile, quindi un
+browser automatizzato non può guidare una partita. La simulazione vive invece in
+`src/state/store.test.ts`: esegue gli stessi tick della scena e verifica
+percorsi, transizioni di zona, orologio e salvataggio. Se una regola di gioco
+non è verificabile lì, è nel posto sbagliato.
+
+In sviluppo `window.__feralis` espone store, mondo e `step(frames)` per far
+avanzare il ciclo a mano dalla console. Il blocco è dentro `import.meta.env.DEV`
+e non finisce nella build di produzione.
 
 ## Comandi
 
 ```
 npm run dev            server di sviluppo
-npm run test           Vitest (include i test sui confini)
+npm run test           Vitest (include i test sui confini e la simulazione di gioco)
 npm run test:watch
 npm run lint           ESLint: confini architetturali + stile
-npm run validate:data  Zod su /data + parità delle lingue + chiavi i18n usate
+npm run validate:data  Zod su /data + parità lingue + chiavi i18n + integrità mappe
+npm run assets:gen     rigenera tileset e sprite placeholder (deterministico)
+npm run maps:build     rigenera data/maps/*.json dall'ASCII (vedi ADR 0005)
 npm run balance:sim    simulatore di bilanciamento (dalla Fase 2)
 npm run build
 npm run size-check     budget 12 MB, fallisce se superato

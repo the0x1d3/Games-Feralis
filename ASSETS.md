@@ -21,9 +21,30 @@ Per ogni asset servono: percorso, origine, autore, licenza, e link alla licenza 
 
 ## Grafica
 
-| File                 | Origine   | Autore           | Licenza   |
-| -------------------- | --------- | ---------------- | --------- |
-| `public/favicon.svg` | Originale | Progetto Feralis | Originale |
+| File                                 | Origine                          | Autore           | Licenza   |
+| ------------------------------------ | -------------------------------- | ---------------- | --------- |
+| `public/favicon.svg`                 | Originale, disegnato a mano      | Progetto Feralis | Originale |
+| `public/assets/tilesets/terrain.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+| `public/assets/sprites/player.png`   | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+
+**Il tileset e lo sprite sono placeholder.** Li produce `scripts/gen-assets.ts`,
+che scrive i PNG senza dipendenze esterne. Rigenerarli dà file identici bit per
+bit, quindi non sporcano il diff. Esistono per essere buttati via quando arriverà
+l'arte vera — PDR §12: prototipa con placeholder colorati, e blocca lo stile su
+tre creature prima di disegnarne 24.
+
+Palette limitata, coerente fra tileset e sprite.
+
+## Mappe
+
+| File                       | Origine                                | Licenza   |
+| -------------------------- | -------------------------------------- | --------- |
+| `data/maps/costa.json`     | Disegnata in ASCII, esportata in Tiled | Originale |
+| `data/maps/bosco.json`     | Disegnata in ASCII, esportata in Tiled | Originale |
+| `data/maps/altopiano.json` | Disegnata in ASCII, esportata in Tiled | Originale |
+
+La fonte è `scripts/author-maps.ts`; si rigenerano con `npm run maps:build`.
+Vedi [ADR 0005](docs/ADR/0005-mappe-da-ascii-a-tiled.md).
 
 ## Audio
 
@@ -32,7 +53,3 @@ _(nessun asset audio: arriva in Fase 7)_
 ## Font
 
 _(nessun font incorporato: la UI usa gli stack di sistema)_
-
-## Tileset e mappe
-
-_(arrivano in Fase 1)_

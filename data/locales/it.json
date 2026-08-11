@@ -1,17 +1,33 @@
 {
   "app.title": "Feralis",
   "app.tagline": "Nulla si doma davvero.",
-  "boot.phase": "Fase 0 — Fondamenta",
-  "boot.hint": "Il mondo esplorabile, il ciclo giorno/notte e il salvataggio arrivano nella Fase 1.",
-  "boot.canvasAlive": "Il canvas è vivo: Phaser sta disegnando questo riquadro.",
-  "diag.title": "Diagnostica",
-  "diag.seed": "Seme della partita",
-  "diag.stream": "Stream «mondo», primi 5 valori",
-  "diag.baseUrl": "Base URL",
-  "diag.reroll": "Rigenera il seme",
-  "diag.explain": "Stesso seme, stessa sequenza: è la garanzia che rende i test riproducibili.",
-  "ui.language": "Lingua",
+
+  "hud.zone": "Zona",
+  "hud.time": "Ora",
+  "hud.dayAndTime": "Giorno {day} · {time}",
+  "hud.phase.dawn": "Alba",
+  "hud.phase.day": "Giorno",
+  "hud.phase.dusk": "Tramonto",
+  "hud.phase.night": "Notte",
+  "hud.saved": "Partita salvata",
+  "hud.saving": "Salvataggio…",
+  "hud.controls": "Frecce o WASD per muoverti · E o Spazio per interagire · La partita si salva da sola",
+
+  "storage.fallback": "Questo browser non concede l'archiviazione permanente: la partita viene tenuta nella memoria locale e può andare persa se svuoti i dati del sito.",
+
+  "dialog.close": "Chiudi",
+
+  "world.zone.costa": "Costa",
+  "world.zone.bosco": "Bosco",
+  "world.zone.altopiano": "Altopiano",
+
+  "world.sign.beach": "Ti sei svegliato qui, senza ricordi e senza Ferali. Il sentiero a nord entra nel bosco.",
+  "world.sign.totem": "Un assito piantato da qualcuno prima di te. Sarebbe un buon posto per una Radura, quando saprai costruirne una.",
+  "world.sign.forest": "Bosco fitto. Gli alberi non si attraversano e i massi nemmeno: serviranno Ferali con le mansioni giuste.",
+  "world.sign.highland": "Altopiano. L'aria si fa fredda e le rupi chiudono il passo: da qui in avanti servirà equipaggiamento.",
+
   "ui.skipToContent": "Vai al contenuto",
+  "ui.language": "Lingua",
   "locale.it": "Italiano",
   "locale.en": "English"
 }

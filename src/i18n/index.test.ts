@@ -30,7 +30,14 @@ describe('t', () => {
   });
 
   it('interpola i parametri', () => {
-    expect(t('diag.seed', { unused: 1 })).toBe(t('diag.seed'));
+    setLocale('it');
+    expect(t('hud.dayAndTime', { day: 3, time: '08:15' })).toBe('Giorno 3 · 08:15');
+    setLocale('en');
+    expect(t('hud.dayAndTime', { day: 3, time: '08:15' })).toBe('Day 3 · 08:15');
+  });
+
+  it('lascia intatti i segnaposto per cui non riceve un valore', () => {
+    expect(t('hud.dayAndTime', { day: 1 })).toContain('{time}');
   });
 
   it('notifica gli ascoltatori al cambio lingua e permette di disiscriversi', () => {

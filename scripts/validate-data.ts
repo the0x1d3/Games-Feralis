@@ -1,132 +1,195 @@
 /**
- * Guardia sui contenuti di /data. Gira in CI: un JSON malformato non arriva in
- * produzione, e il merge si blocca prima.
+ * Guardia sui contenuti di /data. Gira in CI: un dato malformato non arriva in
+ * produzione, e il merge si blocca prima (PDR §6.3, regola 3).
  *
- * In Fase 0 esistono solo i file di lingua, quindi controlla:
- *  1. che ogni file locale sia un dizionario piatto chiave -> stringa non vuota;
- *  2. che IT ed EN abbiano ESATTAMENTE le stesse chiavi (il PDR promette due
- *     lingue dal day one: una chiave che esiste solo in italiano e' un buco che
- *     si scopre in produzione, in inglese, davanti a un tester);
- *  3. che ogni chiave usata da `t('...')` nel codice esista davvero.
- *
- * Nelle fasi successive qui si aggiungono species, moves, items, structures,
- * recipes e tech, con i controlli di integrita' referenziale fra gli id.
+ * Controlla:
+ *  1. che ogni file di lingua sia un dizionario piatto chiave -> stringa;
+ *  2. che IT ed EN abbiano ESATTAMENTE le stesse chiavi;
+ *  3. che ogni chiave usata da un `t('...')` letterale nel codice esista;
+ *  4. che tiles.json e world.json rispettino il loro schema;
+ *  5. che le mappe siano coerenti: layer presenti, gid dentro il tileset,
+ *     nameKey e textKey tradotti, uscite verso zone e comparse esistenti.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+import {
+  checkAmbient,
+  checkMap,
+  mapSchema,
+  spawnNames,
+  tilesSchema,
+  worldSchema,
+  type ParsedMap,
+} from './lib/dataChecks';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const LOCALES_DIR = join(ROOT, 'data', 'locales');
+const MAPS_DIR = join(ROOT, 'data', 'maps');
 const SRC_DIR = join(ROOT, 'src');
 
-/** Riferimento: l'italiano definisce l'insieme delle chiavi valide. */
 const REFERENCE_LOCALE = 'it';
-
 const KEY_PATTERN = /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/;
 
 const localeFileSchema = z.record(
-  z
-    .string()
-    .regex(KEY_PATTERN, 'le chiavi devono essere piatte e in notazione punto, es. "boot.hint"'),
+  z.string().regex(KEY_PATTERN, 'chiavi piatte in notazione punto, es. "hud.zone"'),
   z.string().min(1, 'nessuna traduzione vuota'),
 );
 
 const errors: string[] = [];
 const warnings: string[] = [];
 
-function fail(message: string): void {
-  errors.push(message);
-}
-
-function warn(message: string): void {
-  warnings.push(message);
-}
-
 function listFiles(dir: string, extension: string): string[] {
   const found: string[] = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      found.push(...listFiles(full, extension));
-    } else if (entry.endsWith(extension)) {
-      found.push(full);
-    }
+    if (statSync(full).isDirectory()) found.push(...listFiles(full, extension));
+    else if (entry.endsWith(extension)) found.push(full);
   }
   return found;
 }
 
-// ---------------------------------------------------------------- 1. Schema
+function readJson(file: string, label: string): unknown {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    errors.push(`${label}: non e JSON valido — ${(error as Error).message}`);
+    return undefined;
+  }
+}
+
+function collectIssues(label: string, result: z.ZodSafeParseResult<unknown>): void {
+  if (result.success) return;
+  for (const issue of result.error.issues) {
+    errors.push(`${label} → ${issue.path.join('.') || '(radice)'}: ${issue.message}`);
+  }
+}
+
+/* ------------------------------------------------------------- 1-2. lingue */
 
 const bundles = new Map<string, Record<string, string>>();
 
 for (const file of listFiles(LOCALES_DIR, '.json')) {
   const name = relative(LOCALES_DIR, file).replace(/\.json$/, '');
-  let raw: unknown;
-  try {
-    raw = JSON.parse(readFileSync(file, 'utf8'));
-  } catch (error) {
-    fail(`${name}.json non e' JSON valido: ${(error as Error).message}`);
-    continue;
-  }
+  const raw = readJson(file, `${name}.json`);
+  if (raw === undefined) continue;
 
   const parsed = localeFileSchema.safeParse(raw);
-  if (!parsed.success) {
-    for (const issue of parsed.error.issues) {
-      fail(`${name}.json → ${issue.path.join('.') || '(radice)'}: ${issue.message}`);
-    }
-    continue;
-  }
-  bundles.set(name, parsed.data);
+  collectIssues(`${name}.json`, parsed);
+  if (parsed.success) bundles.set(name, parsed.data);
 }
 
-// -------------------------------------------------------------- 2. Parita'
-
 const reference = bundles.get(REFERENCE_LOCALE);
+const referenceKeys = new Set(Object.keys(reference ?? {}));
 
 if (reference === undefined) {
-  fail(`manca data/locales/${REFERENCE_LOCALE}.json, che e' la lingua di riferimento`);
+  errors.push(`manca data/locales/${REFERENCE_LOCALE}.json, che e la lingua di riferimento`);
 } else {
-  const referenceKeys = new Set(Object.keys(reference));
-
   for (const [name, bundle] of bundles) {
     if (name === REFERENCE_LOCALE) continue;
     const keys = new Set(Object.keys(bundle));
-
     for (const key of referenceKeys) {
-      if (!keys.has(key))
-        fail(`${name}.json: manca la chiave "${key}" presente in ${REFERENCE_LOCALE}.json`);
+      if (!keys.has(key)) errors.push(`${name}.json: manca la chiave "${key}"`);
     }
     for (const key of keys) {
       if (!referenceKeys.has(key))
-        fail(`${name}.json: chiave "${key}" assente da ${REFERENCE_LOCALE}.json`);
+        errors.push(`${name}.json: chiave "${key}" assente da ${REFERENCE_LOCALE}.json`);
     }
-  }
-
-  // ------------------------------------------------------------ 3. Uso reale
-
-  const used = new Set<string>();
-  const callPattern = /\bt\(\s*['"]([^'"]+)['"]/g;
-
-  for (const file of listFiles(SRC_DIR, '.ts')) {
-    const source = readFileSync(file, 'utf8');
-    for (const match of source.matchAll(callPattern)) {
-      const key = match[1];
-      if (key === undefined) continue;
-      used.add(key);
-      if (!referenceKeys.has(key)) {
-        fail(`${relative(ROOT, file)}: t("${key}") non esiste in ${REFERENCE_LOCALE}.json`);
-      }
-    }
-  }
-
-  for (const key of referenceKeys) {
-    if (!used.has(key)) warn(`chiave "${key}" definita ma mai usata da un t() letterale`);
   }
 }
 
-// ----------------------------------------------------------------- Rapporto
+/* ---------------------------------------------------------- 3. uso nel codice */
+
+const usedKeys = new Set<string>();
+
+for (const file of listFiles(SRC_DIR, '.ts')) {
+  const source = readFileSync(file, 'utf8');
+
+  // Chiamata diretta: una chiave inesistente qui e' un ERRORE, perche' il
+  // giocatore vedrebbe "hud.zone" al posto di "Zona".
+  for (const match of source.matchAll(/\bt\(\s*['"]([^'"]+)['"]/g)) {
+    const key = match[1];
+    if (key === undefined) continue;
+    usedKeys.add(key);
+    if (!referenceKeys.has(key)) {
+      errors.push(`${relative(ROOT, file)}: t("${key}") non esiste in ${REFERENCE_LOCALE}.json`);
+    }
+  }
+
+  // Chiave citata come letterale ma passata a t() tramite una variabile o una
+  // tabella di lookup: conta come usata, altrimenti la ricerca delle chiavi
+  // morte segnala falsi positivi e si smette di leggerla.
+  for (const match of source.matchAll(/['"]([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+)['"]/g)) {
+    const key = match[1];
+    if (key !== undefined && referenceKeys.has(key)) usedKeys.add(key);
+  }
+}
+
+/* ------------------------------------------------------------ 4. mondo e tile */
+
+const tilesRaw = readJson(join(ROOT, 'data', 'world', 'tiles.json'), 'tiles.json');
+const tilesParsed = tilesSchema.safeParse(tilesRaw);
+collectIssues('tiles.json', tilesParsed);
+
+const worldRaw = readJson(join(ROOT, 'data', 'world', 'world.json'), 'world.json');
+const worldParsed = worldSchema.safeParse(worldRaw);
+collectIssues('world.json', worldParsed);
+
+if (worldParsed.success) {
+  errors.push(...checkAmbient(worldParsed.data.time.ambient));
+}
+
+/* ----------------------------------------------------------------- 5. mappe */
+
+const maps = new Map<string, ParsedMap>();
+
+for (const file of listFiles(MAPS_DIR, '.json')) {
+  const id = relative(MAPS_DIR, file).replace(/\.json$/, '');
+  const raw = readJson(file, `${id}.json`);
+  if (raw === undefined) continue;
+  const parsed = mapSchema.safeParse(raw);
+  collectIssues(`${id}.json`, parsed);
+  if (parsed.success) maps.set(id, parsed.data);
+}
+
+if (tilesParsed.success) {
+  const knownZones = new Set(maps.keys());
+  const spawnsByZone = new Map<string, ReadonlySet<string>>(
+    [...maps].map(([id, map]) => [id, spawnNames(map)]),
+  );
+
+  for (const [id, map] of maps) {
+    errors.push(
+      ...checkMap(
+        { id, map, tiles: tilesParsed.data, translationKeys: referenceKeys, knownZones },
+        spawnsByZone,
+      ),
+    );
+  }
+
+  if (worldParsed.success && !knownZones.has(worldParsed.data.startZoneId)) {
+    errors.push(`world.json: la zona iniziale "${worldParsed.data.startZoneId}" non ha una mappa`);
+  }
+}
+
+/* ----------------------------------------------------------------- rapporto */
+
+// Le chiavi passate a t() tramite variabile (nomi di zona, testi dei cartelli)
+// non compaiono nella scansione letterale: qui si contano come usate.
+for (const map of maps.values()) {
+  for (const property of map.properties) usedKeys.add(String(property.value));
+  for (const layer of map.layers) {
+    if (layer.type !== 'objectgroup') continue;
+    for (const object of layer.objects) {
+      for (const property of object.properties ?? []) usedKeys.add(String(property.value));
+    }
+  }
+}
+
+for (const key of referenceKeys) {
+  if (!usedKeys.has(key)) warnings.push(`chiave "${key}" definita ma mai usata`);
+}
 
 for (const message of warnings) console.warn(`  avviso  ${message}`);
 
@@ -137,7 +200,10 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-const total = [...bundles.values()].reduce((sum, bundle) => sum + Object.keys(bundle).length, 0);
+const translations = [...bundles.values()].reduce(
+  (sum, bundle) => sum + Object.keys(bundle).length,
+  0,
+);
 console.log(
-  `validate:data — ok: ${bundles.size} file di lingua, ${total} traduzioni, ${warnings.length} avviso/i`,
+  `validate:data — ok: ${bundles.size} lingue, ${translations} traduzioni, ${maps.size} mappe, ${warnings.length} avviso/i`,
 );

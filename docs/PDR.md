@@ -565,14 +565,23 @@ deploy, RNG seeded, clock iniettabile, i18n, `CLAUDE.md`, `docs/ADR/`.
 ✅ Pagina live sull'URL Pages · `npm run verify` verde in CI · `.nojekyll` presente ·
 i confini architetturali falliscono davvero se violati (`scripts/boundaries.test.ts`).
 
-### Fase 1 — Mondo esplorabile (2 giorni)
+### Fase 1 — Mondo esplorabile ✅ completata
 
-Tilemap da Tiled, movimento a 8 direzioni con collisioni, camera con lerp, layer di
-profondità, ciclo giorno/notte (1 giorno = 24 min reali) con tinta ambientale,
-interazione con oggetti, store + salvataggio/caricamento con migrazioni.
+Tilemap in formato Tiled (ADR 0005), movimento a 8 direzioni con collisioni risolte nel
+dominio, camera con lerp, tre layer di profondità (il giocatore cammina sotto le chiome),
+ciclo giorno/notte da 24 minuti reali con tinta ambientale interpolata, cartelli
+interattivi, store con riduttori puri, salvataggio su IndexedDB con doppia scrittura,
+migrazioni versionate e codice di esportazione con checksum.
 
-✅ Cammini per 3 zone, salvi, ricarichi la pagina e ricompari nella stessa posizione con
-lo stesso orario di gioco. Il RNG riprende dallo stato salvato, non dall'inizio.
+✅ Cammini per 3 zone · salvi, ricarichi la pagina e ricompari nella stessa posizione con
+lo stesso orario di gioco · il RNG riprende dallo stato salvato, non dall'inizio ·
+nessun `Math.random()` nel codice (regola di lint attiva).
+
+**Nota sul metodo di verifica.** Phaser sospende il game loop quando la pagina non è
+visibile, quindi una partita non si può guidare da un browser automatizzato. La
+simulazione di riferimento è `src/state/store.test.ts`: esegue gli stessi tick della
+scena attraverso store, riduttori e dominio, e verifica percorsi, transizioni,
+orologio e persistenza. La scena Phaser disegna soltanto ciò che quel test calcola.
 
 ### Fase 2 — Combattimento e cattura (3 giorni)
 
