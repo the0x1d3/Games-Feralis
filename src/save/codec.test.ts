@@ -32,6 +32,17 @@ const SAVE: GameState = {
   ],
   archive: { dew_sprout: { seen: true, caught: 1 }, tide_fin: { seen: true, caught: 0 } },
   inventory: { nodo_base: 8, nodo_migliorato: 2 },
+  base: {
+    totem: { zoneId: 'costa', tx: 12, ty: 9 },
+    structures: [
+      { id: 's1', structureId: 'taglialegna', tx: 14, ty: 9, workerUid: 'abc123def456', workUnits: 4200 },
+      { id: 's2', structureId: 'cava', tx: 16, ty: 9, workUnits: 0 },
+    ],
+    resources: { legna: 40, pietra: 12 },
+    morale: 74,
+    foodDebt: 900_000,
+    moraleProgress: -1_200_000,
+  },
   flags: { hoLettoIlCartello: true },
   stats: {
     playtimeMs: 60_000,
@@ -75,6 +86,36 @@ describe('readGameState', () => {
   it('scarta una direzione senza senso invece di propagarla', () => {
     const state = readGameState({ player: { zoneId: 'costa', x: 0, y: 0, facing: 'diagonale' } });
     expect(state.player.facing).toBe('down');
+  });
+
+  /*
+   * Gli accumulatori della Radura devono restare interi: sono loro a garantire
+   * che tick e segmenti diano lo stesso risultato (ADR 0002). Un salvataggio
+   * modificato a mano non deve poter iniettare virgole in quell'aritmetica.
+   */
+  it('riporta a interi gli accumulatori della Radura', () => {
+    const state = readGameState({
+      player: { zoneId: 'costa', x: 0, y: 0 },
+      base: {
+        totem: { zoneId: 'costa', tx: 3.7, ty: 4.2 },
+        structures: [{ id: 's1', structureId: 'cava', tx: 5, ty: 5, workUnits: 12.9 }],
+        morale: 500,
+        foodDebt: 10.5,
+        moraleProgress: -7.9,
+      },
+    });
+
+    expect(state.base.structures[0]?.workUnits).toBe(12);
+    expect(state.base.totem).toEqual({ zoneId: 'costa', tx: 3, ty: 4 });
+    expect(state.base.morale).toBe(100);
+    expect(state.base.foodDebt).toBe(10);
+    expect(state.base.moraleProgress).toBe(-7);
+  });
+
+  it('una partita senza Radura resta senza Totem, non con uno a zero', () => {
+    const state = readGameState({ player: { zoneId: 'costa', x: 0, y: 0 } });
+    expect(state.base.totem).toBeUndefined();
+    expect(state.base.structures).toEqual([]);
   });
 
   it('ignora i flag che non sono booleani', () => {

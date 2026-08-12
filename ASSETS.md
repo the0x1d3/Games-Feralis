@@ -27,12 +27,18 @@ Per ogni asset servono: percorso, origine, autore, licenza, e link alla licenza 
 | `public/assets/tilesets/terrain.png`  | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 | `public/assets/sprites/player.png`    | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 | `public/assets/sprites/creatures.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+| `public/assets/sprites/structures.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 
 **Il tileset e lo sprite sono placeholder.** Li produce `scripts/gen-assets.ts`,
 che scrive i PNG senza dipendenze esterne. Rigenerarli dà file identici bit per
 bit, quindi non sporcano il diff. Esistono per essere buttati via quando arriverà
 l'arte vera — PDR §12: prototipa con placeholder colorati, e blocca lo stile su
 tre creature prima di disegnarne 24.
+
+Ogni struttura sta in un fotogramma unico da 3x2 tile (96x64 px), ancorata in alto a
+sinistra; quel che avanza resta trasparente. Un fotogramma di misura unica evita un
+atlante a misure variabili: l'impronta vera è quella dichiarata in
+`data/structures.json`, e la scena piazza lo sprite sull'angolo di quell'impronta.
 
 Palette limitata, coerente fra tileset e sprite.
 

@@ -1,7 +1,15 @@
+import baseData from '@data/base.json';
 import battleData from '@data/battle.json';
 import creatureData from '@data/creatures.json';
 import itemData from '@data/items.json';
 import moveData from '@data/moves.json';
+import structureData from '@data/structures.json';
+import {
+  parseBaseConfig,
+  parseStructures,
+  type BaseConfig,
+  type StructureDef,
+} from '@domain/base/config';
 import { parseBattleConfig, type BattleConfig } from '@domain/battle/config';
 import { parseSpecies, parseMoves, type Move, type Species } from '@domain/creature/species';
 import { parseCreatureConfig, type CreatureConfig } from '@domain/creature/stats';
@@ -24,6 +32,8 @@ export interface GameContent {
   readonly moves: ReadonlyMap<string, Move>;
   readonly species: ReadonlyMap<string, Species>;
   readonly items: ReadonlyMap<string, ItemDef>;
+  readonly base: BaseConfig;
+  readonly structures: ReadonlyMap<string, StructureDef>;
 }
 
 function speciesIdFromPath(path: string): string {
@@ -40,6 +50,8 @@ export async function loadContent(): Promise<GameContent> {
   const creatures = parseCreatureConfig(creatureData);
   const moves = parseMoves(moveData);
   const items = parseItems(itemData);
+  const base = parseBaseConfig(baseData);
+  const structureDefs = parseStructures(structureData);
 
   const entries = await Promise.all(
     Object.entries(SPECIES_MODULES).map(async ([path, load]) => {
@@ -69,5 +81,5 @@ export async function loadContent(): Promise<GameContent> {
     }
   }
 
-  return { battle, creatures, moves, species, items };
+  return { battle, creatures, moves, species, items, base, structures: structureDefs };
 }

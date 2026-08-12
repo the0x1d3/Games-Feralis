@@ -1,0 +1,186 @@
+{
+  "structures": [
+    {
+      "id": "totem",
+      "nameKey": "structure.totem",
+      "kind": "totem",
+      "width": 2,
+      "height": 2,
+      "cost": {},
+      "frame": 0
+    },
+    {
+      "id": "mangiatoia",
+      "nameKey": "structure.mangiatoia",
+      "kind": "feeder",
+      "width": 2,
+      "height": 1,
+      "cost": {
+        "legna": 10
+      },
+      "frame": 1
+    },
+    {
+      "id": "taglialegna",
+      "nameKey": "structure.taglialegna",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "legna": 8
+      },
+      "frame": 2,
+      "work": "gathering",
+      "minLevel": 1,
+      "secondsPerOutput": 90,
+      "output": {
+        "legna": 1
+      }
+    },
+    {
+      "id": "raccoglifibra",
+      "nameKey": "structure.raccoglifibra",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "legna": 12
+      },
+      "frame": 3,
+      "work": "gathering",
+      "minLevel": 2,
+      "secondsPerOutput": 140,
+      "output": {
+        "fibra": 1
+      }
+    },
+    {
+      "id": "cava",
+      "nameKey": "structure.cava",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "legna": 15
+      },
+      "frame": 4,
+      "work": "mining",
+      "minLevel": 1,
+      "secondsPerOutput": 110,
+      "output": {
+        "pietra": 1
+      }
+    },
+    {
+      "id": "miniera",
+      "nameKey": "structure.miniera",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "legna": 20,
+        "pietra": 10
+      },
+      "frame": 5,
+      "work": "mining",
+      "minLevel": 2,
+      "secondsPerOutput": 200,
+      "output": {
+        "minerale": 1
+      }
+    },
+    {
+      "id": "orto",
+      "nameKey": "structure.orto",
+      "kind": "producer",
+      "width": 3,
+      "height": 2,
+      "cost": {
+        "legna": 10
+      },
+      "frame": 6,
+      "work": "farming",
+      "minLevel": 1,
+      "secondsPerOutput": 100,
+      "output": {
+        "cibo": 1
+      }
+    },
+    {
+      "id": "vivaio",
+      "nameKey": "structure.vivaio",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "legna": 14,
+        "fibra": 6
+      },
+      "frame": 7,
+      "work": "farming",
+      "minLevel": 2,
+      "secondsPerOutput": 180,
+      "output": {
+        "semi": 1
+      }
+    },
+    {
+      "id": "fornace",
+      "nameKey": "structure.fornace",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "pietra": 20
+      },
+      "frame": 8,
+      "work": "flame",
+      "minLevel": 2,
+      "secondsPerOutput": 240,
+      "input": {
+        "minerale": 2
+      },
+      "output": {
+        "lingotto": 1
+      }
+    },
+    {
+      "id": "pozzo",
+      "nameKey": "structure.pozzo",
+      "kind": "producer",
+      "width": 2,
+      "height": 2,
+      "cost": {
+        "pietra": 12
+      },
+      "frame": 9,
+      "work": "water",
+      "minLevel": 1,
+      "secondsPerOutput": 80,
+      "output": {
+        "acqua": 1
+      }
+    },
+    {
+      "id": "banco",
+      "nameKey": "structure.banco",
+      "kind": "producer",
+      "width": 3,
+      "height": 2,
+      "cost": {
+        "legna": 18
+      },
+      "frame": 10,
+      "work": "crafting",
+      "minLevel": 1,
+      "secondsPerOutput": 220,
+      "input": {
+        "legna": 2,
+        "fibra": 1
+      },
+      "output": {
+        "attrezzi": 1
+      }
+    }
+  ]
+}

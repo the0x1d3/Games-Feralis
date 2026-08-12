@@ -43,15 +43,18 @@ Le correzioni già applicate al PDR originale sono elencate nella sua §0 (Errat
 data/maps/     mappe in formato Tiled (generate, vedi ADR 0005)
 data/species/  una specie per file, id immutabile = nome del file
 data/world/    tiles.json, world.json, encounters.json
-data/          battle.json, creatures.json, moves.json, items.json
+data/          battle.json, creatures.json, moves.json, items.json,
+               base.json, structures.json
 data/locales/  traduzioni IT/EN
 scripts/       guardie di CI + generatori: validate-data, size-check,
-               boundaries.test, gen-assets, author-maps, balance-sim
+               boundaries.test, gen-assets, author-maps, balance-sim,
+               balance-base
 src/domain/    ⭐ logica pura, zero dipendenze impure — è dove vive il gioco
   world/       tempo, collisioni, movimento, interazione, incontri, Tiled
   battle/      ATB, danno, tipi, stati, cattura, IA, macchina a stati
   creature/    specie, statistiche, esperienza, evoluzione, squadra e deposito
-  economy/     oggetti consumabili
+  base/        Radura: piazzamento, lavoratori, produzione, recupero offline
+  economy/     oggetti consumabili e zaino
 src/engine/    l'unica cartella che importa Phaser
 src/scenes/    viste: leggono lo stato e disegnano. Nessuna regola di gioco.
 src/state/     store, riduttori, migrazioni, sessione, caricamento contenuti
@@ -63,18 +66,28 @@ docs/ADR/      una decisione architetturale per file
 
 ## Bilanciamento
 
-I numeri non si scelgono a occhio: si cambia un JSON in `/data` e si esegue
-`npm run balance:sim`, che simula 1000 combattimenti e **fallisce** se la durata
-mediana esce da 20–40 s o se la cattura di una Comune a HP pieni esce da 25–35%.
-Fa parte di `npm run verify` e della CI.
+I numeri non si scelgono a occhio: si cambia un JSON in `/data` e si esegue un
+simulatore, che **fallisce** se il risultato esce dai target del PDR. Entrambi
+fanno parte di `npm run verify` e della CI.
+
+- `npm run balance:sim` — 1000 combattimenti: durata mediana 20–40 s, cattura di
+  una Comune a HP pieni 25–35%.
+- `npm run balance:base` — otto ore di Radura: si mantiene da sola, rende fra 50
+  e 400 legna, il morale regge con il cibo e crolla senza, e il recupero costa
+  meno di 100 segmenti (ADR 0002).
+
+Hanno già bocciato due tarature: gli HP base in Fase 2 (errata E17) e i tempi di
+produzione in Fase 4 (E21). È il loro lavoro.
 
 ## Come si verifica il gioco senza browser
 
 Phaser mette in pausa il game loop quando la pagina non è visibile, quindi un
 browser automatizzato non può guidare una partita. La simulazione vive invece in
 `src/state/store.test.ts`: esegue gli stessi tick della scena e verifica
-percorsi, transizioni di zona, orologio e salvataggio. Se una regola di gioco
-non è verificabile lì, è nel posto sbagliato.
+percorsi, transizioni di zona, orologio e salvataggio. `src/state/base.test.ts`
+fa lo stesso per la Radura, confrontando dieci minuti percorsi tick per tick con
+gli stessi dieci minuti percorsi a segmenti. Se una regola di gioco non è
+verificabile lì, è nel posto sbagliato.
 
 In sviluppo `window.__feralis` espone store, mondo e `step(frames)` per far
 avanzare il ciclo a mano dalla console. Il blocco è dentro `import.meta.env.DEV`
@@ -90,7 +103,8 @@ npm run lint           ESLint: confini architetturali + stile
 npm run validate:data  Zod su /data + parità lingue + chiavi i18n + integrità mappe
 npm run assets:gen     rigenera tileset e sprite placeholder (deterministico)
 npm run maps:build     rigenera data/maps/*.json dall'ASCII (vedi ADR 0005)
-npm run balance:sim    simulatore di bilanciamento (dalla Fase 2)
+npm run balance:sim    bilanciamento del combattimento (dalla Fase 2)
+npm run balance:base   bilanciamento della Radura (dalla Fase 4)
 npm run build
 npm run size-check     budget 12 MB, fallisce se superato
 npm run verify         tutto quanto sopra, nell'ordine della CI

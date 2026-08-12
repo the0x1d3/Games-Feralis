@@ -23,6 +23,7 @@ import {
   worldSchema,
   type ParsedMap,
 } from './lib/dataChecks';
+import { baseSchema, checkBase, structuresSchema } from './lib/baseChecks';
 import {
   battleSchema,
   checkContent,
@@ -259,6 +260,26 @@ if (
   );
 }
 
+/* -------------------------------------------------------------- 7. Radura */
+
+const baseParsed = baseSchema.safeParse(readJson(join(ROOT, 'data', 'base.json'), 'base.json'));
+collectIssues('base.json', baseParsed);
+
+const structuresParsed = structuresSchema.safeParse(
+  readJson(join(ROOT, 'data', 'structures.json'), 'structures.json'),
+);
+collectIssues('structures.json', structuresParsed);
+
+if (baseParsed.success && structuresParsed.success) {
+  errors.push(
+    ...checkBase({
+      base: baseParsed.data,
+      structures: structuresParsed.data,
+      translationKeys: referenceKeys,
+    }),
+  );
+}
+
 /* ----------------------------------------------------------------- rapporto */
 
 // Le chiavi citate dai file di contenuto sono usate anche se nel codice non
@@ -270,6 +291,10 @@ if (creaturesParsed.success) {
 }
 if (battleParsed.success) for (const tool of battleParsed.data.tools) usedKeys.add(tool.nameKey);
 if (itemsParsed.success) for (const entry of itemsParsed.data.items) usedKeys.add(entry.nameKey);
+if (baseParsed.success) for (const entry of baseParsed.data.resources) usedKeys.add(entry.nameKey);
+if (structuresParsed.success) {
+  for (const entry of structuresParsed.data.structures) usedKeys.add(entry.nameKey);
+}
 
 // Le chiavi passate a t() tramite variabile (nomi di zona, testi dei cartelli)
 // non compaiono nella scansione letterale: qui si contano come usate.

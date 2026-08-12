@@ -1,3 +1,4 @@
+import type { BaseState, PlacedStructure } from '@domain/base/state';
 import type { CreatureInstance } from '@domain/creature/instance';
 import { STAT_KEYS, type StatBlock, type StatKey, type StatusId } from '@domain/creature/species';
 import { asNumber, asRecord, asString } from '@domain/guards';
@@ -113,6 +114,63 @@ function readCreatures(value: unknown): CreatureInstance[] {
   return value.map(readCreature).filter((entry): entry is CreatureInstance => entry !== undefined);
 }
 
+/**
+ * La Radura dal salvataggio.
+ *
+ * Gli accumulatori (`workUnits`, `foodDebt`, `moraleProgress`) si arrotondano
+ * a intero in lettura: un salvataggio manipolato a mano non deve poter
+ * introdurre virgole nell'aritmetica che garantisce l'uguaglianza fra tick e
+ * segmenti (ADR 0002).
+ */
+function readPlaced(raw: unknown): PlacedStructure | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const record = raw as RawSave;
+  const id = record['id'];
+  const structureId = record['structureId'];
+  if (typeof id !== 'string' || typeof structureId !== 'string') return undefined;
+
+  const workerUid = record['workerUid'];
+  return {
+    id,
+    structureId,
+    tx: Math.floor(readNumber(record['tx'], 0)),
+    ty: Math.floor(readNumber(record['ty'], 0)),
+    ...(typeof workerUid === 'string' ? { workerUid } : {}),
+    workUnits: Math.max(0, Math.floor(readNumber(record['workUnits'], 0))),
+  };
+}
+
+function readTotem(raw: unknown): BaseState['totem'] {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const record = raw as RawSave;
+  const zoneId = record['zoneId'];
+  if (typeof zoneId !== 'string') return undefined;
+  return {
+    zoneId,
+    tx: Math.floor(readNumber(record['tx'], 0)),
+    ty: Math.floor(readNumber(record['ty'], 0)),
+  };
+}
+
+function readBase(value: unknown): BaseState {
+  const record = typeof value === 'object' && value !== null ? (value as RawSave) : {};
+  const totem = readTotem(record['totem']);
+  const structures = Array.isArray(record['structures'])
+    ? record['structures']
+        .map(readPlaced)
+        .filter((entry): entry is PlacedStructure => entry !== undefined)
+    : [];
+
+  return {
+    ...(totem === undefined ? {} : { totem }),
+    structures,
+    resources: readNumberMap(record['resources']),
+    morale: Math.min(100, Math.max(0, readNumber(record['morale'], 100))),
+    foodDebt: Math.max(0, Math.floor(readNumber(record['foodDebt'], 0))),
+    moraleProgress: Math.trunc(readNumber(record['moraleProgress'], 0)),
+  };
+}
+
 function readArchive(value: unknown): Record<string, ArchiveEntry> {
   const result: Record<string, ArchiveEntry> = {};
   if (typeof value !== 'object' || value === null) return result;
@@ -156,6 +214,7 @@ export function readGameState(raw: RawSave): GameState {
     storage: readCreatures(raw['storage']),
     archive: readArchive(raw['archive']),
     inventory: readNumberMap(raw['inventory']),
+    base: readBase(raw['base']),
     flags: readFlags(raw['flags']),
     stats: {
       playtimeMs: readNumber(stats['playtimeMs'], 0),

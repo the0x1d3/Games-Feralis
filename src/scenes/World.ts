@@ -10,11 +10,13 @@ import {
   type TileRules,
   type Zone,
 } from '@domain/world/zone';
-import { assetUrl, DEPTH, TEXTURE } from '@engine/assets';
+import type { BaseConfig, StructureDef } from '@domain/base/config';
+import { assetUrl, DEPTH, STRUCTURE_FRAME, TEXTURE } from '@engine/assets';
+import { createBaseView, type BaseView } from '@engine/baseRenderer';
 import { createWorldInput, type WorldInput } from '@engine/input';
 import { Phaser } from '@engine/phaser';
 import { renderZone, type ZoneView } from '@engine/zoneRenderer';
-import { GAME_HEIGHT, GAME_WIDTH } from '@engine/config';
+import { CAMERA_ZOOM, GAME_HEIGHT, GAME_WIDTH } from '@engine/config';
 import type { Store } from '@state/store';
 
 /**
@@ -43,11 +45,24 @@ export interface WorldSceneContext {
   readonly onEncounter: (encounter: Encounter) => void;
   /** Falso mentre un combattimento è già in corso o la squadra è vuota. */
   readonly canEncounter: () => boolean;
+  readonly baseConfig: BaseConfig;
+  readonly structureDefs: ReadonlyMap<string, StructureDef>;
+  /**
+   * La casella su cui il pannello della Radura sta proponendo una costruzione,
+   * gia' validata. La scena la disegna e basta: chi decide se e' valida e'
+   * `domain/base/layout.ts`, non il disegno.
+   */
+  readonly buildGhost: () => { def: StructureDef; tx: number; ty: number; ok: boolean } | undefined;
+  /** Il tasto interagisci mentre si costruisce: conferma invece di leggere un cartello. */
+  readonly onBuildConfirm: () => void;
 }
 
 /** Oltre questa soglia si smette di recuperare tempo: una scheda in background
  *  non deve produrre mille tick tutti insieme alla riapertura. */
 const MAX_FRAME_MS = 250;
+
+/** Quanto il velo della luce ambientale deborda oltre la vista, in pixel. */
+const AMBIENT_MARGIN = 96;
 
 function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;
@@ -59,6 +74,7 @@ export class WorldScene extends Phaser.Scene {
   private readonly ctx: WorldSceneContext;
 
   private view?: ZoneView;
+  private baseView?: BaseView;
   private player?: Phaser.GameObjects.Sprite;
   private ambient?: Phaser.GameObjects.Rectangle;
   private worldInput?: WorldInput;
@@ -80,6 +96,10 @@ export class WorldScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     });
+    this.load.spritesheet(TEXTURE.structures, assetUrl('sprites/structures.png'), {
+      frameWidth: STRUCTURE_FRAME.width,
+      frameHeight: STRUCTURE_FRAME.height,
+    });
   }
 
   create(): void {
@@ -88,15 +108,25 @@ export class WorldScene extends Phaser.Scene {
     this.player = this.add.sprite(state.player.x, state.player.y, TEXTURE.player, 0);
     this.player.setDepth(DEPTH.player);
 
+    // Il velo della luce ambientale copre esattamente quel che la camera vede.
+    // Non usa `setScrollFactor(0)` perche' con lo zoom un oggetto ancorato allo
+    // schermo viene comunque ingrandito, e resterebbero due bande scoperte:
+    // `draw()` lo riallinea a `worldView` a ogni frame.
     this.ambient = this.add
       .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0)
       .setOrigin(0, 0)
-      .setScrollFactor(0)
       .setDepth(DEPTH.ambient);
+
+    this.baseView = createBaseView(this, {
+      structures: this.ctx.structureDefs,
+      config: this.ctx.baseConfig,
+      tileSize: this.tileSize(state.player.zoneId),
+    });
 
     this.worldInput = createWorldInput(this);
     this.mountZone(state.player.zoneId);
 
+    this.cameras.main.setZoom(CAMERA_ZOOM);
     this.cameras.main.startFollow(
       this.player,
       true,
@@ -108,7 +138,14 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.worldInput?.destroy();
       this.view?.destroy();
+      this.baseView?.destroy();
     });
+  }
+
+  private tileSize(zoneId: string): number {
+    const zone = this.ctx.zones.get(zoneId);
+    if (zone === undefined) throw new Error(`Zona "${zoneId}" non caricata`);
+    return zone.tileSize;
   }
 
   override update(_time: number, delta: number): void {
@@ -126,7 +163,12 @@ export class WorldScene extends Phaser.Scene {
       if (this.checkEncounter(before)) return;
     }
 
-    if (this.worldInput?.interactPressed() === true) this.tryInteract();
+    if (this.worldInput?.interactPressed() === true) {
+      // In modalita' costruzione il tasto conferma il piazzamento: leggere un
+      // cartello mentre si tiene in mano una capanna non ha senso.
+      if (this.ctx.buildGhost() === undefined) this.tryInteract();
+      else this.ctx.onBuildConfirm();
+    }
 
     this.draw(delta);
   }
@@ -247,8 +289,23 @@ export class WorldScene extends Phaser.Scene {
     sprite.setPosition(x, y + this.ctx.config.player.spriteOffsetY + bob);
     sprite.setFrame(facingFrame(state.player.facing));
 
+    this.baseView?.sync(state.base, state.player.zoneId);
+    this.baseView?.setGhost(this.ctx.buildGhost());
+
     const clock = readClock(state.world.gameTimeMs, this.ctx.config.time);
     const light = ambientAt(clock.hourFloat, this.ctx.config.time.ambient);
-    this.ambient?.setFillStyle(light.color, light.alpha);
+    /*
+     * Il velo è più largo della vista di un margine fisso.
+     *
+     * `worldView` è quello dell'ULTIMO preRender: la camera insegue il
+     * giocatore con interpolazione e si sposta di qualche pixel fra un
+     * fotogramma e l'altro, quindi un velo tagliato esatto lascerebbe una
+     * striscia chiara sul bordo verso cui ci si muove. Il margine costa nulla.
+     */
+    const view = this.cameras.main.worldView;
+    this.ambient
+      ?.setPosition(view.x - AMBIENT_MARGIN, view.y - AMBIENT_MARGIN)
+      .setSize(view.width + AMBIENT_MARGIN * 2, view.height + AMBIENT_MARGIN * 2)
+      .setFillStyle(light.color, light.alpha);
   }
 }

@@ -32,8 +32,11 @@ credendo di correggere un errore.
 | E14 | `catchChance(target, sphere, ...)`: il termine "sphere" avvicina al marchio da cui §3.5 chiede di stare lontani.                                                                          | Rinominato **`tool`**. Nel lessico italiano è il **Nodo**. Gli identificatori di codice restano neutri e in inglese.                                                                                                                                                                   |
 | E16 | «Squadra attiva: 3 creature per lato» (§5.2), ma fra le azioni c'è il **cambio**, che con tutte e tre in campo non avrebbe senso.                                                         | **3 è la dimensione della squadra, non del campo**: uno solo combatte per volta, il cambio scambia l'attivo. Coerente con `assignment: { party: 0\|1\|2 }` di §6.3 e con la cattura, che ha un solo bersaglio.                                                                         |
 | E17 | §5.2 fissa la formula del danno ma non la scala degli HP. Con `ratio ≈ 0.5` e il fattore ×2, `danno ≈ potenza`: se gli HP base restano dell'ordine dell'attacco, un colpo ne toglie metà. | Gli HP base stanno **circa a 10× la potenza delle mosse** (830–1080 contro potenze 34–76). Non è una scelta estetica: `balance-sim` con HP ~400 dava una mediana di 12 s, fuori dal target 20–40 del PDR; a ~950 la mediana è 25,4 s.                                                  |
-| E18 | §5.6 prescrive «KO → risvegli al Totem», ma il Totem arriva in Fase 4.                                                                                                                    | Fino ad allora la squadra si rimette in piedi e si riparte dal punto di comparsa iniziale. La penalità del 10% sulle risorse trasportate arriva **con** il Totem: ha senso solo quando esiste un posto dove risvegliarsi. Senza questa regola una squadra a zero PV è un vicolo cieco. |
+| E18 | §5.6 prescrive «KO → risvegli al Totem», ma il Totem arriva in Fase 4.                                                                                                                    | **Risolta in Fase 4**: si risveglia ai piedi del Totem, e con lui è arrivata la penalità del 10% su `player.inventory` (`base.resources` non si tocca mai, E8). Prima del Totem si riparte dal punto di comparsa iniziale: senza quella regola una squadra a zero PV era un vicolo cieco. |
 | E15 | «IT+EN dal day one» (§1.4) vs «IT/EN completi in Fase 7» (§8).                                                                                                                            | Infrastruttura i18n e divieto di stringhe hardcoded **dalla Fase 0**; rifinitura delle traduzioni in Fase 7.                                                                                                                                                                           |
+| E19 | §4.4 dà a ogni Ferale il suo `morale` e lo usa nella formula di produzione, ma con un morale per lavoratore ogni struttura cambia velocità in un istante diverso: i segmenti omogenei dell'ADR 0002 si moltiplicano e l'uguaglianza fra tick e segmenti non è più dimostrabile. | **Il morale è uno solo, ed è della Radura** (0..100, tre fasce). Il campo `morale` di `CreatureInstance` resta nello schema per la riproduzione di Fase 6, ma non entra nella produzione. Vedi ADR 0006. |
+| E20 | Una catena miniera → fornace dà risultati diversi a seconda di come si spezza il tempo: la fornace trova gli ingredienti tutti alla fine con un segmento lungo, e man mano con i tick. | **Le lavorazioni con `input` si fermano offline.** Chi estrae dal mondo lavora anche a scheda chiusa; chi trasforma no. Vedi ADR 0006. |
+| E21 | §4.4 non fissa i tempi di produzione delle strutture. La prima taratura (20 s per la legna) rendeva 1200 unità in otto ore offline, cioè sessanta strutture: la Radura si costruiva da sola mentre il giocatore non c'era. | Tempi riscalati a 80–240 s per ciclo (`balance:base` pretende 50–400 legna in otto ore). È lo stesso ciclo di E17: la taratura la boccia un simulatore, non un'opinione. |
 
 ---
 
@@ -633,16 +636,38 @@ nel pannello e torna a chi l'ha aperto, e ogni controllo è un `<button>` vero.
   specie senza spawn abbia almeno un predecessore che ci evolve, altrimenti sarebbe
   irraggiungibile.
 
-### Fase 4 — La Radura (4 giorni — la fase più importante)
+### Fase 4 — La Radura ✅ completata
 
-Totem, editor di costruzione su griglia, 9 strutture produttive, assegnazione
-lavoratori, tick di produzione, morale e mangiatoia, **progressione offline con cap 8h**,
-riepilogo "mentre eri via".
+Totem con area rivendicata circolare, costruzione su griglia con il fantasma della
+struttura in mano, 9 strutture produttive, assegnazione dei lavoratori per mansione e
+livello, tick di produzione in aritmetica intera, morale della Radura, **progressione
+offline con cap 8h a segmenti omogenei**, riepilogo "mentre eri via". Schema di
+salvataggio 4.
 
-✅ Assegni 3 Ferali, chiudi la scheda, riapri dopo 10 minuti reali e trovi la quantità di
-risorse **esattamente uguale** a quella calcolata dal test · spostare l'orologio indietro
-non genera risorse né penalità · **la simulazione a tick e quella a segmenti danno lo
-stesso risultato** (test obbligatorio, ADR 0002).
+✅ Assegni 3 Ferali (`src/state/base.test.ts`) · dieci minuti percorsi tick per tick e a
+segmenti danno risorse, morale e orologio **identici** · spostare l'orologio indietro non
+genera risorse né penalità (`elapsedSince`) · **la simulazione a tick e quella a segmenti
+danno lo stesso risultato** su otto ore, verificato su risorse, morale, debito di cibo e
+lavoro accumulato di ogni struttura (test obbligatorio dell'ADR 0002,
+`src/domain/base/offline.test.ts`).
+
+**Regole fissate qui, in aggiunta al PDR originale** (vedi ADR 0006 ed errata E19–E21)
+
+- **Il morale è della Radura, non del singolo Ferale.** Con un morale per lavoratore
+  ogni struttura cambierebbe velocità in un istante diverso, e i segmenti omogenei si
+  moltiplicherebbero fino a rendere indimostrabile l'uguaglianza fra i due percorsi.
+- **Chi trasforma non lavora offline**; chi estrae dal mondo sì. Una catena
+  miniera → fornace darebbe risultati dipendenti da come si spezza il tempo.
+- **Gli accumulatori sono interi.** Lavoro svolto, debito di cibo e progresso del morale
+  si contano in millisecondi × permille: l'uguaglianza fra `rate × 3600 s` e 3600 somme
+  di `rate × 1 s` discende dalla proprietà distributiva, non dalla fortuna.
+- **Il Totem è anche una struttura piazzata**: occupa spazio sulla griglia e si disegna
+  come le altre, invece di essere un caso speciale in ogni funzione. Non si smonta.
+- **Un rifiuto di piazzamento non annulla la costruzione**: si dice perché e la struttura
+  resta in mano, così basta spostarsi di una casella.
+- **Nota sul bilanciamento.** `balance:base` ha bocciato la prima taratura dei tempi di
+  produzione (1200 legna in otto ore, cioè sessanta strutture costruite in assenza) e li
+  ha fatti riscalare — errata E21. Stesso ciclo della Fase 2.
 
 ### Fase 5 — Crafting, tecnologie, gate ambientali (2 giorni)
 

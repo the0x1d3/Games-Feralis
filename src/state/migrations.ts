@@ -53,6 +53,16 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
    * il deposito nasce vuoto e non c'è nulla da spostare.
    */
   2: (save) => ({ ...save, storage: [] }),
+
+  /**
+   * 3 → 4 (Fase 4): arriva la Radura.
+   *
+   * Nasce vuota: il Totem si pianta in partita, non lo si può inventare qui.
+   */
+  3: (save) => ({
+    ...save,
+    base: { structures: [], resources: {}, morale: 100, foodDebt: 0, moraleProgress: 0 },
+  }),
 };
 
 export interface MigrationResult {

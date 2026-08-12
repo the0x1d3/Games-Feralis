@@ -42,8 +42,13 @@ jobs:
 
       # Criteri di accettazione della Fase 2: 1000 combattimenti senza crash,
       # durata mediana 20-40 s, cattura di una Comune a HP pieni fra 25 e 35%.
-      - name: Bilanciamento
+      - name: Bilanciamento del combattimento
         run: npm run balance:sim
+
+      # Fase 4: la Radura di partenza si mantiene da sola, otto ore offline
+      # rendono abbastanza da tornare ma non tanto da sostituire il gioco.
+      - name: Bilanciamento della Radura
+        run: npm run balance:base
 
       - name: Build
         run: npm run build

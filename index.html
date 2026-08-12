@@ -15,9 +15,15 @@
   </head>
   <body>
     <div id="app">
-      <header id="brand" class="brand"></header>
-      <div id="game-canvas" role="img" aria-label="Feralis"></div>
-      <main id="ui-overlay"></main>
+      <!-- Un palcoscenico solo: il canvas sotto, l'interfaccia sopra. La HUD non
+           sta più in una colonna accanto al gioco, ci sta dentro. -->
+      <div id="stage" class="stage">
+        <div id="game-canvas" class="stage__canvas" role="img" aria-label="Feralis"></div>
+        <main id="ui-overlay" class="stage__ui">
+          <header id="brand" class="brand"></header>
+        </main>
+        <div id="landing" class="landing"></div>
+      </div>
     </div>
     <noscript>
       <p>Feralis ha bisogno di JavaScript per funzionare.</p>

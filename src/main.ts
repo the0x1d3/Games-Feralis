@@ -2,7 +2,7 @@ import './ui/styles.css';
 
 import { checkEncounter } from '@domain/world/encounters';
 import { readClock } from '@domain/world/time';
-import { findSpawn } from '@domain/world/zone';
+import { findSpawn, type Zone } from '@domain/world/zone';
 import { createGame } from '@engine/index';
 import { detectLocale, setLocale } from '@i18n/index';
 import { BattleScene } from '@scenes/Battle';
@@ -10,9 +10,11 @@ import { WorldScene } from '@scenes/World';
 import { createBattleController } from '@state/battleController';
 import { startSession, storageKind } from '@state/session';
 import { systemClock } from '@state/systemClock';
+import { mountBase } from '@ui/base';
 import { mountBattleUi } from '@ui/battleUi';
 import { mountDialog } from '@ui/dialog';
 import { mountHud } from '@ui/hud';
+import { mountLanding } from '@ui/landing';
 import { mountRoster } from '@ui/roster';
 
 /**
@@ -20,7 +22,7 @@ import { mountRoster } from '@ui/roster';
  * incontra il resto del progetto.
  */
 
-const GAME_VERSION = '0.3.0';
+const GAME_VERSION = '0.4.0';
 
 function requireElement(id: string): HTMLElement {
   const node = document.getElementById(id);
@@ -32,6 +34,16 @@ async function bootstrap(): Promise<void> {
   setLocale(detectLocale(navigator.languages));
 
   const overlay = requireElement('ui-overlay');
+
+  /*
+   * La schermata di ingresso si monta PRIMA di caricare la sessione: copre il
+   * rettangolo nero del caricamento, e il clic su "Gioca" è anche il gesto
+   * esplicito che in Fase 7 servirà a far partire l'audio.
+   */
+  const landing = mountLanding(requireElement('landing'), () => {
+    landing.hide();
+  });
+
   const hud = mountHud(requireElement('brand'), overlay);
   const dialog = mountDialog(overlay);
 
@@ -52,6 +64,30 @@ async function bootstrap(): Promise<void> {
   const isNight = (): boolean =>
     readClock(store.getState().world.gameTimeMs, config.time).phase === 'night';
 
+  /**
+   * Dove ci si risveglia dopo un KO: ai piedi del Totem se la Radura esiste,
+   * altrimenti al punto di comparsa iniziale (PDR §4.6, errata E18).
+   */
+  const wakeUpPoint = (): { zone: Zone; x: number; y: number } | undefined => {
+    const totem = store.getState().base.totem;
+    const totemZone = totem === undefined ? undefined : world.zones.get(totem.zoneId);
+
+    if (totem !== undefined && totemZone !== undefined) {
+      // Una casella sotto il Totem: risvegliarsi dentro la sua impronta
+      // significherebbe comparire incastrati in una collisione.
+      return {
+        zone: totemZone,
+        x: (totem.tx + 1) * totemZone.tileSize,
+        y: (totem.ty + 2.5) * totemZone.tileSize,
+      };
+    }
+
+    const startZone = world.zones.get(config.startZoneId);
+    if (startZone === undefined) return undefined;
+    const spawn = findSpawn(startZone, config.startSpawn);
+    return { zone: startZone, x: spawn.x, y: spawn.y };
+  };
+
   const battle = createBattleController({
     store,
     content,
@@ -59,13 +95,14 @@ async function bootstrap(): Promise<void> {
     clock: systemClock,
     isNight,
     onDefeat: () => {
-      // Ci si risveglia dove è cominciata la partita. In Fase 4 diventerà il
-      // Totem della Radura, e allora avrà senso anche la penalità del PDR §5.6.
-      const startZone = world.zones.get(config.startZoneId);
-      if (startZone === undefined) return;
-      const spawn = findSpawn(startZone, config.startSpawn);
-      store.dispatch({ type: 'enterZone', zoneId: startZone.id, x: spawn.x, y: spawn.y });
-      hud.setZone(startZone.nameKey);
+      const wake = wakeUpPoint();
+      if (wake === undefined) return;
+
+      store.dispatch({ type: 'enterZone', zoneId: wake.zone.id, x: wake.x, y: wake.y });
+      // Si perde una frazione di quel che si portava addosso (PDR §4.6). Il
+      // deposito della Radura non si tocca mai: E8.
+      store.dispatch({ type: 'loseOnDefeat' });
+      hud.setZone(wake.zone.nameKey);
     },
   });
 
@@ -86,6 +123,21 @@ async function bootstrap(): Promise<void> {
     dispatch: (action) => {
       store.dispatch(action);
     },
+    onOpen: () => {
+      base.close();
+    },
+  });
+
+  const base = mountBase(overlay, {
+    getState: () => store.getState(),
+    content,
+    zones: world.zones,
+    dispatch: (action) => {
+      store.dispatch(action);
+    },
+    onOpen: () => {
+      roster.close();
+    },
   });
 
   const initialZone = world.zones.get(store.getState().player.zoneId);
@@ -96,8 +148,15 @@ async function bootstrap(): Promise<void> {
     hud.setClock(readClock(state.world.gameTimeMs, config.time));
     hud.setParty(state.party.length);
     roster.refresh();
+    base.refresh();
   });
   hud.setParty(store.getState().party.length);
+
+  // Il riepilogo del rientro compare una volta sola, e solo se c'è qualcosa da
+  // dire: aprirlo per una ricarica di dieci secondi sarebbe rumore.
+  if (session.offline !== undefined && Object.keys(session.offline.produced).length > 0) {
+    base.showOffline(session.offline);
+  }
 
   const worldScene = new WorldScene({
     store,
@@ -127,12 +186,25 @@ async function bootstrap(): Promise<void> {
         world.encounters,
         rng.stream('world'),
       ),
-    canEncounter: () => battle.current() === undefined && store.getState().party.length > 0,
+    baseConfig: content.base,
+    structureDefs: content.structures,
+    buildGhost: () => base.ghost(),
+    onBuildConfirm: () => {
+      base.confirmBuild();
+      void save();
+    },
+    canEncounter: () =>
+      battle.current() === undefined &&
+      store.getState().party.length > 0 &&
+      // Costruire non è il momento di incontrare qualcuno: si perderebbe la
+      // struttura che si ha in mano insieme al filo del discorso.
+      base.ghost() === undefined,
     onEncounter: (encounter) => {
       dialog.hide();
       // La squadra si gestisce fuori dallo scontro: dentro c'è già il menu
       // Cambia, e due pannelli aperti insieme sono solo confusione.
       roster.close();
+      base.close();
       battle.start(encounter);
       // Dal livello del gioco si usa `run` e non `launch`: quest'ultimo esiste
       // solo sul plugin di scena, cioè dentro una scena.
@@ -161,6 +233,8 @@ async function bootstrap(): Promise<void> {
     scenes: [worldScene, battleScene],
   });
 
+  landing.setReady();
+
   /*
    * Sonda di sviluppo. `import.meta.env.DEV` è falso nella build di produzione,
    * quindi Vite elimina del tutto questo blocco: non è un gancio di test
@@ -176,6 +250,8 @@ async function bootstrap(): Promise<void> {
       content,
       battle,
       roster,
+      base,
+      session,
       game,
       save,
       step: (frames: number, deltaMs = 1000 / 60): void => {

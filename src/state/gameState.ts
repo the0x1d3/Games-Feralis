@@ -1,4 +1,5 @@
 import type { CreatureInstance } from '@domain/creature/instance';
+import { emptyBase, type BaseState } from '@domain/base/state';
 import type { Roster } from '@domain/creature/roster';
 import { createStreamStates, type RngStreamStates } from '@domain/rng';
 import type { WorldConfig } from '@domain/world/config';
@@ -17,7 +18,7 @@ import type { Facing } from '@domain/world/zone';
  * Schema 2 (Fase 2): squadra, archivio delle specie e inventario.
  */
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export interface PlayerState {
   readonly zoneId: string;
@@ -56,6 +57,8 @@ export interface GameState {
   /** Tutti gli altri. Senza deposito la cattura si spegne dopo dieci minuti. */
   readonly storage: readonly CreatureInstance[];
   readonly archive: Readonly<Record<string, ArchiveEntry>>;
+  /** La Radura: Totem, strutture, risorse, morale. Vuota finché non pianti il Totem. */
+  readonly base: BaseState;
   readonly inventory: Readonly<Record<string, number>>;
   readonly flags: Readonly<Record<string, boolean>>;
   readonly stats: StatsState;
@@ -88,6 +91,7 @@ export function createNewGame(options: NewGameOptions): GameState {
     party: [],
     storage: [],
     archive: {},
+    base: emptyBase(),
     inventory: { ...options.config.startingInventory },
     flags: {},
     stats: {

@@ -11,11 +11,14 @@ import { NO_INPUT, type MoveInput } from '@domain/world/movement';
 import { parseTileRules, parseZone } from '@domain/world/tiled';
 import { readClock } from '@domain/world/time';
 import { findSpawn, type Zone } from '@domain/world/zone';
+import baseData from '@data/base.json';
 import battleData from '@data/battle.json';
 import creatureData from '@data/creatures.json';
 import itemData from '@data/items.json';
+import structureData from '@data/structures.json';
 import dewSprout from '@data/species/dew_sprout.json';
 import verdantStalk from '@data/species/verdant_stalk.json';
+import { parseBaseConfig, parseStructures } from '@domain/base/config';
 import { parseBattleConfig } from '@domain/battle/config';
 import { createCreature } from '@domain/creature/instance';
 import { parseSpecies, type Species } from '@domain/creature/species';
@@ -58,6 +61,8 @@ const deps: ReducerDeps = {
   species,
   creatures: creatureConfig,
   items: parseItems(itemData),
+  baseConfig: parseBaseConfig(baseData),
+  structureDefs: parseStructures(structureData),
 };
 
 function speciesOf(id: string): Species {

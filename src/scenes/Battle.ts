@@ -49,21 +49,21 @@ export class BattleScene extends Phaser.Scene {
 
     // Terreno: due bande, una per contendente. Bastano a dare profondità senza
     // un fondale disegnato, che arriverà con l'arte vera.
-    this.add.ellipse(GAME_WIDTH * 0.68, GAME_HEIGHT * 0.42, 220, 60, 0x24402f).setDepth(0);
-    this.add.ellipse(GAME_WIDTH * 0.3, GAME_HEIGHT * 0.74, 260, 70, 0x1c3325).setDepth(0);
+    this.add.ellipse(GAME_WIDTH * 0.68, GAME_HEIGHT * 0.42, 440, 120, 0x24402f).setDepth(0);
+    this.add.ellipse(GAME_WIDTH * 0.3, GAME_HEIGHT * 0.74, 520, 140, 0x1c3325).setDepth(0);
 
     this.sprites.set(
       'enemy',
       this.add
         .sprite(GAME_WIDTH * 0.68, GAME_HEIGHT * 0.36, TEXTURE.creatures, 0)
-        .setScale(2)
+        .setScale(4)
         .setDepth(1),
     );
     this.sprites.set(
       'player',
       this.add
         .sprite(GAME_WIDTH * 0.3, GAME_HEIGHT * 0.66, TEXTURE.creatures, 0)
-        .setScale(2.6)
+        .setScale(5.2)
         .setDepth(2)
         .setFlipX(true),
     );

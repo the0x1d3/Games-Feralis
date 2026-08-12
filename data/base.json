@@ -1,0 +1,41 @@
+{
+  "totem": { "radiusTiles": 12 },
+
+  "production": {
+    "//workLevelBonus": "Liv. 1 → 1.0x, 2 → 1.35x, 3 → 1.70x (PDR §5.4)",
+    "workLevelBonus": 0.35,
+    "nightFactor": 0.5,
+    "moraleThresholds": { "full": 70, "low": 30 },
+    "moraleFactors": { "full": 1.0, "low": 0.6, "exhausted": 0.35 }
+  },
+
+  "food": {
+    "perWorkerPerHour": 2,
+    "moraleRecoverPerHour": 25,
+    "moraleDecayPerHour": 18,
+    "startingMorale": 100
+  },
+
+  "defeat": {
+    "//inventoryLossFraction": "PDR §4.6: KO → risvegli al Totem e perdi il 10% di ciò che portavi. Il deposito della Radura non si tocca mai (E8).",
+    "inventoryLossFraction": 0.1
+  },
+
+  "offline": {
+    "//capMs": "Otto ore. Serve a dare un motivo per tornare, non a punire chi manca.",
+    "capMs": 28800000,
+    "maxSegments": 2048
+  },
+
+  "resources": [
+    { "id": "legna", "nameKey": "resource.legna" },
+    { "id": "fibra", "nameKey": "resource.fibra" },
+    { "id": "pietra", "nameKey": "resource.pietra" },
+    { "id": "minerale", "nameKey": "resource.minerale" },
+    { "id": "cibo", "nameKey": "resource.cibo" },
+    { "id": "semi", "nameKey": "resource.semi" },
+    { "id": "lingotto", "nameKey": "resource.lingotto" },
+    { "id": "acqua", "nameKey": "resource.acqua" },
+    { "id": "attrezzi", "nameKey": "resource.attrezzi" }
+  ]
+}

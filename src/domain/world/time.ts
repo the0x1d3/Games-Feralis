@@ -126,6 +126,27 @@ export function ambientAt(hourFloat: number, keyframes: readonly AmbientKeyframe
   return { color: previous.color, alpha: previous.alpha };
 }
 
+/**
+ * Millisecondi che mancano al prossimo passaggio giorno↔notte.
+ *
+ * Serve alla simulazione offline (ADR 0002): la notte dimezza la produzione dei
+ * Ferali non notturni, quindi è uno dei confini che spezzano un segmento
+ * omogeneo. Restituisce almeno 1 per non far girare a vuoto il ciclo.
+ */
+export function msUntilNightBoundary(totalMs: number, config: TimeConfig): number {
+  const hourMs = msPerGameHour(config);
+  const { hourFloat } = readClock(totalMs, config);
+
+  let best = Number.POSITIVE_INFINITY;
+  for (const hour of [config.dawnStartHour, config.nightStartHour]) {
+    let delta = (hour - hourFloat) * hourMs;
+    if (delta <= 0) delta += config.dayLengthRealMs;
+    best = Math.min(best, delta);
+  }
+
+  return Math.max(1, Math.ceil(best));
+}
+
 /** Formato "hh:mm" per la HUD. Non e' testo tradotto: sono cifre. */
 export function formatClock(clock: WorldClock): string {
   const pad = (value: number): string => value.toString().padStart(2, '0');

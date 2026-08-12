@@ -5,6 +5,7 @@ import { onLocaleChange, t, type TranslationKey } from '@i18n/index';
 import type { GameContent } from '@state/loadContent';
 import type { GameState } from '@state/gameState';
 import type { GameAction } from '@state/store';
+import { bar, element, ghostButton as button } from './widgets';
 
 /**
  * Squadra, deposito e archivio.
@@ -20,6 +21,8 @@ export interface RosterUiDeps {
   readonly getState: () => GameState;
   readonly content: GameContent;
   readonly dispatch: (action: GameAction) => void;
+  /** Chiamata quando il pannello si apre: serve a chiudere quelli rivali. */
+  readonly onOpen?: () => void;
 }
 
 export interface RosterUi {
@@ -34,33 +37,6 @@ type Tab = 'party' | 'storage' | 'archive';
 
 function fromData(key: string): TranslationKey {
   return key as TranslationKey;
-}
-
-function element<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  node.className = className;
-  return node;
-}
-
-function button(label: string, onClick: () => void, disabled = false): HTMLButtonElement {
-  const node = document.createElement('button');
-  node.type = 'button';
-  node.className = 'button button--ghost roster__action';
-  node.textContent = label;
-  node.disabled = disabled;
-  node.addEventListener('click', onClick);
-  return node;
-}
-
-function bar(className: string, ratio: number): HTMLElement {
-  const track = element('div', `bar ${className}`);
-  const fill = element('span', 'bar__fill');
-  fill.style.width = `${(Math.max(0, Math.min(1, ratio)) * 100).toFixed(1)}%`;
-  track.append(fill);
-  return track;
 }
 
 export function mountRoster(root: HTMLElement, deps: RosterUiDeps): RosterUi {
@@ -271,6 +247,9 @@ export function mountRoster(root: HTMLElement, deps: RosterUiDeps): RosterUi {
   }
 
   function open(): void {
+    // Due pannelli grandi aperti insieme non ci stanno nella schermata, e
+    // nessuno dei due si legge: chi apre chiude l'altro.
+    deps.onOpen?.();
     opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
     panel.hidden = false;
     render();

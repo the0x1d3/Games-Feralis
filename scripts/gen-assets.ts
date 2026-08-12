@@ -377,6 +377,89 @@ function buildCreatures(): Raster {
 
 /* -------------------------------------------------------------------------- */
 
+/* ------------------------------------------------------------- Strutture */
+
+const STRUCTURE_W = 96; // 3 tile: la larghezza massima di una struttura
+const STRUCTURE_H = 64; // 2 tile
+
+/**
+ * Ogni struttura è disegnata ancorata in alto a sinistra dentro un fotogramma
+ * unico da 3×2 tile; quel che avanza resta trasparente. Un fotogramma solo
+ * evita un atlante con misure variabili, e la scena piazza lo sprite
+ * sull'angolo della sua impronta.
+ *
+ * L'ordine è quello di `frame` in data/structures.json.
+ */
+const STRUCTURES: ReadonlyArray<{
+  readonly id: string;
+  readonly w: number;
+  readonly h: number;
+  readonly base: Rgba;
+  readonly accent: Rgba;
+}> = [
+  { id: 'totem', w: 2, h: 2, base: [122, 96, 62, 255], accent: [255, 212, 121, 255] },
+  { id: 'mangiatoia', w: 2, h: 1, base: [138, 108, 70, 255], accent: [206, 178, 120, 255] },
+  { id: 'taglialegna', w: 2, h: 2, base: [128, 100, 66, 255], accent: [79, 143, 74, 255] },
+  { id: 'raccoglifibra', w: 2, h: 2, base: [128, 100, 66, 255], accent: [206, 178, 120, 255] },
+  { id: 'cava', w: 2, h: 2, base: [116, 118, 124, 255], accent: [160, 162, 168, 255] },
+  { id: 'miniera', w: 2, h: 2, base: [96, 98, 106, 255], accent: [122, 140, 176, 255] },
+  { id: 'orto', w: 3, h: 2, base: [110, 88, 58, 255], accent: [104, 168, 92, 255] },
+  { id: 'vivaio', w: 2, h: 2, base: [110, 88, 58, 255], accent: [150, 200, 120, 255] },
+  { id: 'fornace', w: 2, h: 2, base: [104, 96, 92, 255], accent: [214, 118, 62, 255] },
+  { id: 'pozzo', w: 2, h: 2, base: [116, 118, 124, 255], accent: [76, 148, 194, 255] },
+  { id: 'banco', w: 3, h: 2, base: [134, 104, 68, 255], accent: [178, 178, 172, 255] },
+];
+
+function paintStructure(
+  r: Raster,
+  ox: number,
+  look: (typeof STRUCTURES)[number],
+  index: number,
+): void {
+  const w = look.w * TILE;
+  const h = look.h * TILE;
+
+  r.fillRect(ox, 0, w, h, C.none);
+  r.fillEllipse(ox + w / 2, h - 3, w / 2 - 2, 3, SHADOW);
+
+  // Basamento con bordo: dà volume e rende leggibile l'impronta occupata.
+  r.fillRect(ox + 2, 6, w - 4, h - 10, look.base);
+  r.fillRect(ox + 2, 6, w - 4, 3, shade(look.base, 0.12));
+  r.fillRect(ox + 2, h - 7, w - 4, 3, shade(look.base, -0.12));
+
+  const cx = ox + w / 2;
+  const cy = h / 2 + 1;
+
+  switch (index) {
+    case 0: // totem: un palo con il Nodo in cima
+      r.fillRect(cx - 3, 10, 6, h - 20, shade(look.base, -0.15));
+      r.fillEllipse(cx, 14, 9, 8, look.accent);
+      r.fillEllipse(cx, 14, 4, 3, shade(look.accent, -0.2));
+      break;
+    case 1: // mangiatoia: una vasca
+      r.fillRect(ox + 6, 12, w - 12, h - 22, look.accent);
+      r.fillRect(ox + 9, 15, w - 18, h - 28, shade(look.accent, -0.15));
+      break;
+    default: {
+      // Un simbolo al centro, diverso per famiglia di mansione.
+      r.fillEllipse(cx, cy, 11, 9, look.accent);
+      r.fillEllipse(cx - 4, cy - 3, 5, 4, shade(look.accent, 0.12));
+      for (let i = 0; i < 3; i += 1) {
+        r.fillRect(ox + 6 + i * 6, h - 12, 3, 5, shade(look.base, -0.18));
+      }
+      break;
+    }
+  }
+}
+
+function buildStructures(): Raster {
+  const raster = new Raster(STRUCTURE_W * STRUCTURES.length, STRUCTURE_H);
+  STRUCTURES.forEach((look, index) => {
+    paintStructure(raster, index * STRUCTURE_W, look, index);
+  });
+  return raster;
+}
+
 function write(relativePath: string, raster: Raster): void {
   const full = join(ROOT, relativePath);
   mkdirSync(dirname(full), { recursive: true });
@@ -389,4 +472,5 @@ console.log('gen-assets');
 write('public/assets/tilesets/terrain.png', buildTileset());
 write('public/assets/sprites/player.png', buildPlayer());
 write('public/assets/sprites/creatures.png', buildCreatures());
+write('public/assets/sprites/structures.png', buildStructures());
 console.log('gen-assets — ok (ricorda di aggiornare ASSETS.md se aggiungi un file)');

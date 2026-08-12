@@ -1,4 +1,5 @@
-import type { Clock } from '@domain/clock';
+import { simulateOffline, type OfflineResult } from '@domain/base/offline';
+import { elapsedSince, type Clock } from '@domain/clock';
 import { createCreature } from '@domain/creature/instance';
 import { findSpawn } from '@domain/world/zone';
 import { loadGame, saveGame, storageKind, type SlotId } from '@save/storage';
@@ -6,7 +7,8 @@ import { createNewGame, type GameState } from './gameState';
 import { loadContent, type GameContent } from './loadContent';
 import { loadWorld, type LoadedWorld } from './loadWorld';
 import { createRngRuntime, type RngRuntime } from './rngRuntime';
-import { createStore, type Store } from './store';
+import { workersOf } from './baseActions';
+import { createStore, type ReducerDeps, type Store } from './store';
 
 /**
  * Mette insieme mondo, stato e persistenza, e tiene vivo l'autosalvataggio.
@@ -32,6 +34,8 @@ export interface Session {
   readonly rng: RngRuntime;
   /** Vero se lo slot principale era illeggibile e si e' ripescato il backup. */
   readonly recoveredFromBackup: boolean;
+  /** Cosa ha prodotto la Radura mentre non c'eri. Assente se non c'era nulla. */
+  readonly offline?: OfflineResult;
   save(): Promise<void>;
   dispose(): void;
 }
@@ -61,20 +65,54 @@ function resolveInitialState(
   });
 }
 
+/**
+ * Recupera la produzione delle ore in cui la scheda era chiusa.
+ *
+ * Il tempo trascorso passa da `elapsedSince`, che applica le due regole del PDR
+ * §5.4: orologio spostato indietro = zero, e cap alle ore configurate. Il
+ * risultato e' `undefined` quando non c'e' nulla da raccontare, cosi' l'HUD non
+ * apre un riquadro "mentre eri via" per una ricarica di dieci secondi.
+ */
+function catchUpOffline(store: Store, deps: ReducerDeps, now: number): OfflineResult | undefined {
+  const state = store.getState();
+  if (state.base.totem === undefined || state.lastSavedAt <= 0) return undefined;
+
+  const elapsedMs = elapsedSince(now, state.lastSavedAt, deps.baseConfig.offline.capMs);
+  if (elapsedMs <= 0) return undefined;
+
+  const result = simulateOffline(
+    { base: state.base, gameTimeMs: state.world.gameTimeMs, elapsedMs },
+    {
+      config: deps.baseConfig,
+      structures: deps.structureDefs,
+      workers: workersOf(state, deps),
+      time: deps.config.time,
+    },
+  );
+
+  store.dispatch({ type: 'applyOffline', base: result.base, gameTimeMs: result.gameTimeMs });
+  return result;
+}
+
 export async function startSession(options: SessionOptions): Promise<Session> {
   const [world, content] = await Promise.all([loadWorld(), loadContent()]);
   const loaded = await loadGame(SLOT);
   const initial = resolveInitialState(world, loaded?.state, options);
 
   const rng = createRngRuntime(initial.rngStreams);
-  const store = createStore(initial, {
+  const deps: ReducerDeps = {
     config: world.config,
     zones: world.zones,
     partySize: content.battle.partySize,
     species: content.species,
     creatures: content.creatures,
     items: content.items,
-  });
+    baseConfig: content.base,
+    structureDefs: content.structures,
+  };
+  const store = createStore(initial, deps);
+
+  const offline = catchUpOffline(store, deps, options.clock.now());
 
   /*
    * Il primo Ferale è un regalo, non una cattura (PDR §3.4, minuto 0-2).
@@ -140,6 +178,7 @@ export async function startSession(options: SessionOptions): Promise<Session> {
     content,
     rng,
     recoveredFromBackup: loaded?.fromBackup === true,
+    ...(offline === undefined ? {} : { offline }),
     save,
     dispose(): void {
       clearInterval(timer);

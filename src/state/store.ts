@@ -1,3 +1,4 @@
+import type { BaseConfig, StructureDef } from '@domain/base/config';
 import { maxHp, type CreatureInstance } from '@domain/creature/instance';
 import {
   admit,
@@ -17,6 +18,7 @@ import { advanceClock } from '@domain/world/time';
 import type { WorldConfig } from '@domain/world/config';
 import { type MoveInput, stepActor } from '@domain/world/movement';
 import type { Zone } from '@domain/world/zone';
+import { reduceBase, tickBase, type BaseAction } from './baseActions';
 import { archiveWith, rosterOf, type GameState } from './gameState';
 
 /**
@@ -55,6 +57,8 @@ export type GameAction =
   | { readonly type: 'seeSpecies'; readonly speciesId: string }
   /** Registra una cattura nell'archivio e nelle statistiche. */
   | { readonly type: 'countCapture'; readonly speciesId: string }
+  /* La Radura: piantare, costruire, assegnare, recuperare (baseActions.ts). */
+  | BaseAction
   | { readonly type: 'consumeItem'; readonly itemId: string; readonly amount: number }
   | { readonly type: 'battleWon' }
   /** Rimette nello stato la posizione degli stream dopo che il gioco li ha usati. */
@@ -68,6 +72,8 @@ export interface ReducerDeps {
   readonly species: ReadonlyMap<string, Species>;
   readonly creatures: CreatureConfig;
   readonly items: ReadonlyMap<string, ItemDef>;
+  readonly baseConfig: BaseConfig;
+  readonly structureDefs: ReadonlyMap<string, StructureDef>;
 }
 
 function requireZone(deps: ReducerDeps, zoneId: string): Zone {
@@ -92,10 +98,15 @@ export function createReducer(deps: ReducerDeps) {
           },
         );
 
+        const gameTimeMs = advanceClock(state.world.gameTimeMs, action.deltaMs);
+
         return {
           ...state,
           player: { zoneId: state.player.zoneId, x: moved.x, y: moved.y, facing: moved.facing },
-          world: { gameTimeMs: advanceClock(state.world.gameTimeMs, action.deltaMs) },
+          world: { gameTimeMs },
+          // La Radura produce anche mentre cammini: è la stessa funzione che
+          // gira offline, chiamata con un tick invece che con un segmento.
+          base: tickBase(state, action.deltaMs, gameTimeMs, deps),
           stats: { ...state.stats, playtimeMs: state.stats.playtimeMs + action.deltaMs },
         };
       }
@@ -206,6 +217,15 @@ export function createReducer(deps: ReducerDeps) {
           archive: archiveWith(state.archive, action.speciesId, { seen: true, caught: 1 }),
           stats: { ...state.stats, creaturesCaught: state.stats.creaturesCaught + 1 },
         };
+
+      case 'plantTotem':
+      case 'build':
+      case 'demolish':
+      case 'assignWorker':
+      case 'unassignWorker':
+      case 'applyOffline':
+      case 'loseOnDefeat':
+        return reduceBase(state, action, deps);
 
       case 'consumeItem': {
         const left = Math.max(0, (state.inventory[action.itemId] ?? 0) - action.amount);
