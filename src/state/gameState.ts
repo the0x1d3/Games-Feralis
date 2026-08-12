@@ -1,4 +1,5 @@
 import type { CreatureInstance } from '@domain/creature/instance';
+import type { Roster } from '@domain/creature/roster';
 import { createStreamStates, type RngStreamStates } from '@domain/rng';
 import type { WorldConfig } from '@domain/world/config';
 import { startingTotalMs } from '@domain/world/time';
@@ -16,7 +17,7 @@ import type { Facing } from '@domain/world/zone';
  * Schema 2 (Fase 2): squadra, archivio delle specie e inventario.
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export interface PlayerState {
   readonly zoneId: string;
@@ -52,6 +53,8 @@ export interface GameState {
   readonly world: WorldState;
   /** Fino a `battle.json → party.size` esemplari. Il primo è quello che entra per primo. */
   readonly party: readonly CreatureInstance[];
+  /** Tutti gli altri. Senza deposito la cattura si spegne dopo dieci minuti. */
+  readonly storage: readonly CreatureInstance[];
   readonly archive: Readonly<Record<string, ArchiveEntry>>;
   readonly inventory: Readonly<Record<string, number>>;
   readonly flags: Readonly<Record<string, boolean>>;
@@ -83,6 +86,7 @@ export function createNewGame(options: NewGameOptions): GameState {
     // La squadra parte vuota di proposito: il Ferale iniziale viene consegnato
     // dalla sessione, con lo stesso percorso che recupera un salvataggio vecchio.
     party: [],
+    storage: [],
     archive: {},
     inventory: { ...options.config.startingInventory },
     flags: {},
@@ -93,6 +97,11 @@ export function createNewGame(options: NewGameOptions): GameState {
       creaturesCaught: 0,
     },
   };
+}
+
+/** Squadra e deposito visti insieme, come li vuole `src/domain/creature/roster.ts`. */
+export function rosterOf(state: GameState): Roster {
+  return { party: state.party, storage: state.storage };
 }
 
 export function archiveWith(

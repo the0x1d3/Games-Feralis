@@ -18,6 +18,16 @@
 
   "alpha": { "statMultiplier": 1.35 },
 
+  "xp": {
+    "curve": { "fast": 0.8, "medium": 1, "slow": 1.25 },
+    "quadratic": 8,
+    "linear": 30,
+    "flat": 25,
+    "fromDefeat": 40,
+    "alphaMultiplier": 2,
+    "partyShare": 0.5
+  },
+
   "traitCount": { "none": 0.4, "one": 0.45, "two": 0.15 },
 
   "traits": [

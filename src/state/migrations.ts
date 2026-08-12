@@ -45,6 +45,14 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       creaturesCaught: 0,
     },
   }),
+
+  /**
+   * 2 → 3 (Fase 3): arriva il deposito.
+   *
+   * Chi giocava alla Fase 2 aveva al massimo tre Ferali, tutti in squadra:
+   * il deposito nasce vuoto e non c'è nulla da spostare.
+   */
+  2: (save) => ({ ...save, storage: [] }),
 };
 
 export interface MigrationResult {

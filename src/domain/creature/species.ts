@@ -48,9 +48,15 @@ export interface SpawnEntry {
   readonly weight: number;
 }
 
+export interface Evolution {
+  readonly toId: string;
+  readonly level: number;
+}
+
 export interface Species {
   readonly id: string;
   readonly nameKey: string;
+  readonly evolution?: Evolution;
   readonly types: readonly ElementType[];
   readonly baseStats: StatBlock;
   readonly growthCurve: 'fast' | 'medium' | 'slow';
@@ -133,9 +139,22 @@ export function parseSpecies(raw: unknown, expectedId?: string): Species {
     work[asEnum(key, WORK_KINDS, `${id}.work`)] = asNumber(value, `${id}.work.${key}`);
   }
 
+  const evolutionRaw = record['evolution'];
+  const evolution =
+    evolutionRaw === undefined
+      ? undefined
+      : {
+          toId: asString(asRecord(evolutionRaw, `${id}.evolution`)['toId'], `${id}.evolution.toId`),
+          level: asNumber(
+            asRecord(evolutionRaw, `${id}.evolution`)['level'],
+            `${id}.evolution.level`,
+          ),
+        };
+
   return {
     id,
     nameKey: asString(record['nameKey'], `${id}.nameKey`),
+    ...(evolution === undefined ? {} : { evolution }),
     types: asArray(record['types'], `${id}.types`).map((type, i) =>
       asEnum(type, ELEMENT_TYPES, `${id}.types[${i}]`),
     ),

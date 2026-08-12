@@ -1,5 +1,6 @@
 import type { ElementType, Move, Species, StatBlock, StatusId } from '../creature/species';
 import type { CreatureConfig } from '../creature/stats';
+import type { ItemDef } from '../economy/items';
 import type { RngState } from '../rng';
 import type { AiLevel } from './ai';
 import type { BattleConfig } from './config';
@@ -53,6 +54,12 @@ export type BattleEvent =
       readonly chance: number;
       readonly shakes: number;
     }
+  | {
+      readonly kind: 'item';
+      readonly itemId: string;
+      readonly targetIndex: number;
+      readonly applied: boolean;
+    }
   | { readonly kind: 'flee'; readonly success: boolean }
   | { readonly kind: 'faint'; readonly side: Side }
   | { readonly kind: 'outcome'; readonly outcome: BattleOutcome };
@@ -82,6 +89,7 @@ export interface BattleContext {
   readonly creatures: CreatureConfig;
   readonly moves: ReadonlyMap<string, Move>;
   readonly species: ReadonlyMap<string, Species>;
+  readonly items: ReadonlyMap<string, ItemDef>;
   readonly isNight: boolean;
   /** Livello medio della squadra del giocatore, per la formula di cattura. */
   readonly teamLevel: number;

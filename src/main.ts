@@ -13,6 +13,7 @@ import { systemClock } from '@state/systemClock';
 import { mountBattleUi } from '@ui/battleUi';
 import { mountDialog } from '@ui/dialog';
 import { mountHud } from '@ui/hud';
+import { mountRoster } from '@ui/roster';
 
 /**
  * Punto di ingresso. Qui, e solo qui, il mondo impuro (DOM, orologio, browser)
@@ -79,6 +80,14 @@ async function bootstrap(): Promise<void> {
     },
   });
 
+  const roster = mountRoster(overlay, {
+    getState: () => store.getState(),
+    content,
+    dispatch: (action) => {
+      store.dispatch(action);
+    },
+  });
+
   const initialZone = world.zones.get(store.getState().player.zoneId);
   if (initialZone !== undefined) hud.setZone(initialZone.nameKey);
   hud.setClock(readClock(store.getState().world.gameTimeMs, config.time));
@@ -86,6 +95,7 @@ async function bootstrap(): Promise<void> {
   store.subscribe((state) => {
     hud.setClock(readClock(state.world.gameTimeMs, config.time));
     hud.setParty(state.party.length);
+    roster.refresh();
   });
   hud.setParty(store.getState().party.length);
 
@@ -120,6 +130,9 @@ async function bootstrap(): Promise<void> {
     canEncounter: () => battle.current() === undefined && store.getState().party.length > 0,
     onEncounter: (encounter) => {
       dialog.hide();
+      // La squadra si gestisce fuori dallo scontro: dentro c'è già il menu
+      // Cambia, e due pannelli aperti insieme sono solo confusione.
+      roster.close();
       battle.start(encounter);
       // Dal livello del gioco si usa `run` e non `launch`: quest'ultimo esiste
       // solo sul plugin di scena, cioè dentro una scena.
@@ -162,6 +175,7 @@ async function bootstrap(): Promise<void> {
       world,
       content,
       battle,
+      roster,
       game,
       save,
       step: (frames: number, deltaMs = 1000 / 60): void => {

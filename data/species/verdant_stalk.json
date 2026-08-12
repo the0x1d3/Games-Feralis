@@ -1,0 +1,20 @@
+{
+  "id": "verdant_stalk",
+  "nameKey": "species.verdant_stalk",
+  "types": ["flora"],
+  "baseStats": { "hp": 1180, "att": 68, "dif": 76, "vel": 58, "ele": 82, "res": 72 },
+  "growthCurve": "medium",
+  "work": { "gathering": 3, "farming": 2 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "rampicante", "level": 1 },
+    { "moveId": "spora", "level": 5 },
+    { "moveId": "morso", "level": 9 },
+    { "moveId": "torrente", "level": 18 }
+  ],
+  "baseCatchRate": 0.4,
+  "rarity": "rare",
+  "spawn": [],
+  "size": "M",
+  "sprite": { "atlas": "creatures", "key": "verdant_stalk", "frame": 8 }
+}

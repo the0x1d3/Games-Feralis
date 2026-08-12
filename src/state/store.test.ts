@@ -11,8 +11,19 @@ import { NO_INPUT, type MoveInput } from '@domain/world/movement';
 import { parseTileRules, parseZone } from '@domain/world/tiled';
 import { readClock } from '@domain/world/time';
 import { findSpawn, type Zone } from '@domain/world/zone';
+import battleData from '@data/battle.json';
+import creatureData from '@data/creatures.json';
+import itemData from '@data/items.json';
+import dewSprout from '@data/species/dew_sprout.json';
+import verdantStalk from '@data/species/verdant_stalk.json';
+import { parseBattleConfig } from '@domain/battle/config';
+import { createCreature } from '@domain/creature/instance';
+import { parseSpecies, type Species } from '@domain/creature/species';
+import { parseCreatureConfig } from '@domain/creature/stats';
+import { parseItems } from '@domain/economy/items';
+import { createRng } from '@domain/rng';
 import { createNewGame, type GameState } from './gameState';
-import { createStore, type Store } from './store';
+import { createStore, type ReducerDeps, type Store } from './store';
 
 /**
  * Simulazione della partita vera, senza Phaser.
@@ -32,6 +43,38 @@ const zones = new Map<string, Zone>(
     parseZone(raw, id, rules),
   ]),
 );
+
+const battleConfig = parseBattleConfig(battleData);
+const creatureConfig = parseCreatureConfig(creatureData);
+const species = new Map<string, Species>([
+  ['dew_sprout', parseSpecies(dewSprout, 'dew_sprout')],
+  ['verdant_stalk', parseSpecies(verdantStalk, 'verdant_stalk')],
+]);
+
+const deps: ReducerDeps = {
+  config,
+  zones,
+  partySize: battleConfig.partySize,
+  species,
+  creatures: creatureConfig,
+  items: parseItems(itemData),
+};
+
+function speciesOf(id: string): Species {
+  const found = species.get(id);
+  if (found === undefined) throw new Error(`specie assente dal test: ${id}`);
+  return found;
+}
+
+let uidCounter = 0;
+function creature(level = 5, id = 'dew_sprout') {
+  uidCounter += 1;
+  return createCreature(
+    { species: speciesOf(id), level, isAlpha: false, caughtAt: 0 },
+    creatureConfig,
+    createRng(uidCounter * 977),
+  );
+}
 
 function newGame(): GameState {
   const start = zones.get(config.startZoneId);
@@ -93,7 +136,7 @@ function holdUntil(
 let store: Store;
 
 beforeEach(() => {
-  store = createStore(newGame(), { config, zones, partySize: 3 });
+  store = createStore(newGame(), deps);
 });
 
 describe('la partita comincia dove deve', () => {
@@ -231,6 +274,109 @@ describe('riduttore', () => {
   });
 });
 
+describe('squadra e deposito', () => {
+  function fill(count: number): void {
+    for (let i = 0; i < count; i += 1) {
+      store.dispatch({ type: 'grantCreature', creature: creature(5), caught: true });
+    }
+  }
+
+  /*
+   * Il criterio di accettazione della Fase 3: catturi dieci Ferali e li ritrovi
+   * tutti. Senza deposito la cattura si spegne dopo il terzo.
+   */
+  it('dieci catture entrano tutte: tre in squadra, sette in deposito', () => {
+    fill(10);
+    const state = store.getState();
+    expect(state.party).toHaveLength(battleConfig.partySize);
+    expect(state.storage).toHaveLength(10 - battleConfig.partySize);
+    expect(state.stats.creaturesCaught).toBe(10);
+    expect(state.archive['dew_sprout']?.caught).toBe(10);
+  });
+
+  it('si sposta un Ferale in deposito e lo si riprende', () => {
+    fill(4);
+    const before = store.getState();
+    const uid = before.party[1]?.uid ?? '';
+
+    store.dispatch({ type: 'moveToStorage', uid });
+    expect(store.getState().party.map((c) => c.uid)).not.toContain(uid);
+    expect(store.getState().storage.map((c) => c.uid)).toContain(uid);
+
+    store.dispatch({ type: 'moveToParty', uid });
+    expect(store.getState().party.map((c) => c.uid)).toContain(uid);
+  });
+
+  /* Una squadra vuota renderebbe impossibile qualunque scontro successivo. */
+  it('non lascia svuotare la squadra', () => {
+    store.dispatch({ type: 'grantCreature', creature: creature(5), caught: false });
+    const uid = store.getState().party[0]?.uid ?? '';
+    store.dispatch({ type: 'moveToStorage', uid });
+    expect(store.getState().party).toHaveLength(1);
+  });
+
+  it('non fa entrare un quarto Ferale in una squadra da tre', () => {
+    fill(5);
+    const uid = store.getState().storage[0]?.uid ?? '';
+    store.dispatch({ type: 'moveToParty', uid });
+    expect(store.getState().party).toHaveLength(battleConfig.partySize);
+    expect(store.getState().storage.map((c) => c.uid)).toContain(uid);
+  });
+
+  it('riordina la squadra: l ordine decide chi entra per primo', () => {
+    fill(3);
+    const before = store.getState().party.map((c) => c.uid);
+    store.dispatch({ type: 'swapParty', a: 0, b: 2 });
+    const after = store.getState().party.map((c) => c.uid);
+    expect(after[0]).toBe(before[2]);
+    expect(after[2]).toBe(before[0]);
+  });
+
+  it('assegna e toglie un soprannome', () => {
+    fill(1);
+    const uid = store.getState().party[0]?.uid ?? '';
+
+    store.dispatch({ type: 'renameCreature', uid, nickname: '  Foglia  ' });
+    expect(store.getState().party[0]?.nickname).toBe('Foglia');
+
+    store.dispatch({ type: 'renameCreature', uid, nickname: '   ' });
+    expect(store.getState().party[0]?.nickname).toBeUndefined();
+  });
+});
+
+describe('oggetti', () => {
+  it('una bacca cura, e viene consumata', () => {
+    store.dispatch({ type: 'grantCreature', creature: { ...creature(5), hp: 10 }, caught: false });
+    const uid = store.getState().party[0]?.uid ?? '';
+    const before = store.getState().inventory['bacca_verde'] ?? 0;
+
+    store.dispatch({ type: 'useItem', itemId: 'bacca_verde', uid });
+
+    expect(store.getState().party[0]?.hp).toBeGreaterThan(10);
+    expect(store.getState().inventory['bacca_verde']).toBe(before - 1);
+  });
+
+  /*
+   * Un oggetto che non ha effetto non viene consumato: sprecarlo per una
+   * distrazione è frustrazione gratuita, e costa una riga evitarla.
+   */
+  it('non consuma una bacca su chi è già al massimo', () => {
+    store.dispatch({ type: 'grantCreature', creature: creature(5), caught: false });
+    const uid = store.getState().party[0]?.uid ?? '';
+    const before = store.getState().inventory['bacca_verde'] ?? 0;
+
+    store.dispatch({ type: 'useItem', itemId: 'bacca_verde', uid });
+    expect(store.getState().inventory['bacca_verde']).toBe(before);
+  });
+
+  it('non usa un oggetto che non si possiede', () => {
+    store.dispatch({ type: 'grantCreature', creature: { ...creature(5), hp: 5 }, caught: false });
+    const uid = store.getState().party[0]?.uid ?? '';
+    store.dispatch({ type: 'useItem', itemId: 'bacca_ambra', uid });
+    expect(store.getState().party[0]?.hp).toBe(5);
+  });
+});
+
 describe('salvare e ricaricare', () => {
   /*
    * "Salvi, ricarichi la pagina e ricompari nella stessa posizione con lo
@@ -242,7 +388,7 @@ describe('salvare e ricaricare', () => {
     const saved = store.getState();
 
     // Ricaricare la pagina = ricostruire lo store dallo stato salvato.
-    const reloaded = createStore(saved, { config, zones, partySize: 3 });
+    const reloaded = createStore(saved, deps);
     const state = reloaded.getState();
 
     expect(state.player).toEqual(saved.player);
@@ -256,7 +402,7 @@ describe('salvare e ricaricare', () => {
     hold(store, { ...NO_INPUT, up: true }, 45);
     const saved = store.getState();
 
-    const reloaded = createStore(saved, { config, zones, partySize: 3 });
+    const reloaded = createStore(saved, deps);
     hold(reloaded, { ...NO_INPUT, up: true }, 75);
 
     expect(reloaded.getState().player.zoneId).toBe('bosco');

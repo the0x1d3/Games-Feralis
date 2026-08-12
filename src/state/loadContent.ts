@@ -1,9 +1,11 @@
 import battleData from '@data/battle.json';
 import creatureData from '@data/creatures.json';
+import itemData from '@data/items.json';
 import moveData from '@data/moves.json';
 import { parseBattleConfig, type BattleConfig } from '@domain/battle/config';
 import { parseSpecies, parseMoves, type Move, type Species } from '@domain/creature/species';
 import { parseCreatureConfig, type CreatureConfig } from '@domain/creature/stats';
+import { parseItems, type ItemDef } from '@domain/economy/items';
 
 /**
  * Contenuto di gioco: mosse, specie, regole di combattimento.
@@ -21,6 +23,7 @@ export interface GameContent {
   readonly creatures: CreatureConfig;
   readonly moves: ReadonlyMap<string, Move>;
   readonly species: ReadonlyMap<string, Species>;
+  readonly items: ReadonlyMap<string, ItemDef>;
 }
 
 function speciesIdFromPath(path: string): string {
@@ -36,6 +39,7 @@ export async function loadContent(): Promise<GameContent> {
   const battle = parseBattleConfig(battleData);
   const creatures = parseCreatureConfig(creatureData);
   const moves = parseMoves(moveData);
+  const items = parseItems(itemData);
 
   const entries = await Promise.all(
     Object.entries(SPECIES_MODULES).map(async ([path, load]) => {
@@ -56,7 +60,14 @@ export async function loadContent(): Promise<GameContent> {
         throw new Error(`La specie "${entry.id}" usa la mossa "${slot.moveId}", che non esiste`);
       }
     }
+
+    // Un'evoluzione che punta a una specie inesistente è un vicolo cieco che si
+    // manifesterebbe solo al livello soglia, cioè settimane dopo l'errore.
+    const evolution = entry.evolution;
+    if (evolution !== undefined && !species.has(evolution.toId)) {
+      throw new Error(`La specie "${entry.id}" evolve in "${evolution.toId}", che non esiste`);
+    }
   }
 
-  return { battle, creatures, moves, species };
+  return { battle, creatures, moves, species, items };
 }

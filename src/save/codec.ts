@@ -108,6 +108,11 @@ function readCreature(raw: unknown): CreatureInstance | undefined {
   };
 }
 
+function readCreatures(value: unknown): CreatureInstance[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(readCreature).filter((entry): entry is CreatureInstance => entry !== undefined);
+}
+
 function readArchive(value: unknown): Record<string, ArchiveEntry> {
   const result: Record<string, ArchiveEntry> = {};
   if (typeof value !== 'object' || value === null) return result;
@@ -147,11 +152,8 @@ export function readGameState(raw: RawSave): GameState {
       facing: readFacing(player['facing']),
     },
     world: { gameTimeMs: readNumber(world['gameTimeMs'], 0) },
-    party: Array.isArray(raw['party'])
-      ? raw['party']
-          .map(readCreature)
-          .filter((entry): entry is CreatureInstance => entry !== undefined)
-      : [],
+    party: readCreatures(raw['party']),
+    storage: readCreatures(raw['storage']),
     archive: readArchive(raw['archive']),
     inventory: readNumberMap(raw['inventory']),
     flags: readFlags(raw['flags']),

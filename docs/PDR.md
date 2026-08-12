@@ -604,13 +604,34 @@ ha bocciato la prima taratura (mediana 12 s) e la scala degli HP è stata corret
 conseguenza — vedi l'errata E17. È esattamente il ciclo che il §12 chiede di avere
 dalla Fase 2 e non dalla Fase 6.
 
-### Fase 3 — Squadra, archivio, inventario (2 giorni)
+### Fase 3 — Squadra, archivio, inventario ✅ completata
 
-Deposito, archivio specie, XP e livelli, una evoluzione funzionante, inventario,
-consumabili, nickname, IV e tratti generati alla cattura, `computeStats` (E7).
+Deposito oltre i tre in squadra, archivio delle specie con voci che si sbloccano
+incontrandole, esperienza e livelli con apprendimento delle mosse, **tre linee
+evolutive** funzionanti, inventario con quattro consumabili usabili dentro e fuori
+dal combattimento, soprannomi, riordino della squadra. Schema di salvataggio 3.
 
-✅ Catturi 10 Ferali, ne evolvi uno, riordini la squadra, tutto persiste dopo il reload.
-UI navigabile solo da tastiera.
+✅ **Catturi 10 Ferali** e li ritrovi tutti (tre in squadra, sette in deposito) ·
+**ne evolvi uno** (Rugiadello → Verdegambo al livello 12, verificato in partita) ·
+riordini la squadra e assegni un soprannome · **tutto persiste dopo il reload** ·
+**UI navigabile solo da tastiera**: `S` apre la squadra, `Esc` chiude, il fuoco entra
+nel pannello e torna a chi l'ha aperto, e ogni controllo è un `<button>` vero.
+
+**Regole fissate qui, in aggiunta al PDR originale**
+
+- **Salire di livello non cura.** Gli HP massimi guadagnati vengono accreditati (o
+  salire abbasserebbe la percentuale di vita), ma la ferita resta: vincere non deve
+  essere anche un modo gratuito di rimettersi in sesto.
+- **L'esemplare evoluto è lo stesso esemplare**: conserva uid, IV, tratti,
+  soprannome e frazione di vita. Sostituirlo con uno nuovo sarebbe più semplice da
+  scrivere e cancellerebbe il senso di averlo cresciuto.
+- **Un oggetto senza effetto non viene consumato.** Sprecarlo per una distrazione è
+  frustrazione gratuita, e costa una riga evitarla.
+- **La squadra non resta mai vuota** e non supera mai i tre: entrambe le invarianti
+  vivono nel dominio, non nella UI.
+- **Le forme evolute non compaiono in natura.** `validate:data` verifica che ogni
+  specie senza spawn abbia almeno un predecessore che ci evolve, altrimenti sarebbe
+  irraggiungibile.
 
 ### Fase 4 — La Radura (4 giorni — la fase più importante)
 

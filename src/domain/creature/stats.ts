@@ -28,8 +28,21 @@ export interface TraitDef {
   readonly stats: Partial<Record<StatKey, number>>;
 }
 
+export interface XpConfig {
+  readonly curve: Readonly<Record<'fast' | 'medium' | 'slow', number>>;
+  readonly quadratic: number;
+  readonly linear: number;
+  readonly flat: number;
+  /** Punti esperienza per livello dell'avversario sconfitto o catturato. */
+  readonly fromDefeat: number;
+  readonly alphaMultiplier: number;
+  /** Frazione che ricevono i compagni che non erano in campo. */
+  readonly partyShare: number;
+}
+
 export interface CreatureConfig {
   readonly maxLevel: number;
+  readonly xp: XpConfig;
   readonly stats: {
     readonly levelScaleDivisor: number;
     readonly ivMax: number;
@@ -59,8 +72,24 @@ export function parseCreatureConfig(raw: unknown): CreatureConfig {
     };
   }
 
+  const xp = asRecord(root['xp'], 'creatures.json.xp');
+  const curveRaw = asRecord(xp['curve'], 'creatures.json.xp.curve');
+
   return {
     maxLevel: asNumber(root['maxLevel'], 'creatures.json.maxLevel'),
+    xp: {
+      curve: {
+        fast: asNumber(curveRaw['fast'], 'creatures.json.xp.curve.fast'),
+        medium: asNumber(curveRaw['medium'], 'creatures.json.xp.curve.medium'),
+        slow: asNumber(curveRaw['slow'], 'creatures.json.xp.curve.slow'),
+      },
+      quadratic: asNumber(xp['quadratic'], 'creatures.json.xp.quadratic'),
+      linear: asNumber(xp['linear'], 'creatures.json.xp.linear'),
+      flat: asNumber(xp['flat'], 'creatures.json.xp.flat'),
+      fromDefeat: asNumber(xp['fromDefeat'], 'creatures.json.xp.fromDefeat'),
+      alphaMultiplier: asNumber(xp['alphaMultiplier'], 'creatures.json.xp.alphaMultiplier'),
+      partyShare: asNumber(xp['partyShare'], 'creatures.json.xp.partyShare'),
+    },
     stats: {
       levelScaleDivisor: asNumber(
         stats['levelScaleDivisor'],
@@ -144,8 +173,17 @@ export function computeStats(input: StatInput, config: CreatureConfig): StatBloc
   return result;
 }
 
-/** Punti esperienza necessari per passare da `level` al successivo. */
-export function xpToNextLevel(species: Species, level: number): number {
-  const curve = { fast: 0.8, medium: 1, slow: 1.25 }[species.growthCurve];
-  return Math.floor(curve * (12 * level * level + 40 * level + 30));
+/**
+ * Punti esperienza necessari per passare da `level` al successivo.
+ *
+ * La curva è quadratica: i primi livelli arrivano in fretta — è la Fase 1 del
+ * gioco, dove serve che le cose succedano — e poi rallenta. I coefficienti
+ * stanno in `creatures.json`, quindi rendere la progressione più lenta o più
+ * rapida è modificare un JSON, non ricompilare.
+ */
+export function xpToNextLevel(species: Species, level: number, config: CreatureConfig): number {
+  const { curve, quadratic, linear, flat } = config.xp;
+  return Math.floor(
+    curve[species.growthCurve] * (quadratic * level * level + linear * level + flat),
+  );
 }

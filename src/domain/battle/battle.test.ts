@@ -48,6 +48,7 @@ const context: BattleContext = {
   creatures,
   moves,
   species,
+  items: new Map(),
   isNight: false,
   teamLevel: 10,
 };

@@ -28,7 +28,7 @@ export interface BattleUi {
   destroy(): void;
 }
 
-type Menu = 'root' | 'moves' | 'party' | 'tools';
+type Menu = 'root' | 'moves' | 'party' | 'tools' | 'items';
 
 const LOG_LINES = 6;
 
@@ -74,6 +74,11 @@ export function mountBattleUi(root: HTMLElement, deps: BattleUiDeps): BattleUi {
     const team = side === 'player' ? current.state.player : current.state.enemy;
     const active = team.members[team.active];
     return active === undefined ? undefined : deps.context().species.get(active.speciesId);
+  }
+
+  function nameOfSpecies(speciesId: string): string {
+    const species = deps.context().species.get(speciesId);
+    return species === undefined ? speciesId : t(fromData(species.nameKey));
   }
 
   function activeOf(side: Side): BattleCombatant | undefined {
@@ -138,6 +143,12 @@ export function mountBattleUi(root: HTMLElement, deps: BattleUiDeps): BattleUi {
     const naming = {
       speciesOf,
       moveById: (moveId: string) => deps.context().moves.get(moveId),
+      itemById: (itemId: string) => deps.context().items.get(itemId),
+      partyNameAt: (index: number): string | undefined => {
+        const member = current?.state.player.members[index];
+        if (member === undefined) return undefined;
+        return nameOfSpecies(member.speciesId);
+      },
     };
 
     const enemy = speciesOf('enemy');
@@ -169,6 +180,10 @@ export function mountBattleUi(root: HTMLElement, deps: BattleUiDeps): BattleUi {
       ),
       button(t('battle.action.catch'), () => {
         menu = 'tools';
+        render(current);
+      }),
+      button(t('battle.action.item'), () => {
+        menu = 'items';
         render(current);
       }),
       button(t('battle.action.flee'), () => {
@@ -287,11 +302,85 @@ export function mountBattleUi(root: HTMLElement, deps: BattleUiDeps): BattleUi {
     );
   }
 
+  /** Oggetti usabili in combattimento, applicati al Ferale in campo. */
+  function renderItemMenu(): void {
+    const context = deps.context();
+    const inventory = deps.getState().inventory;
+    const targetIndex = current?.state.player.active ?? 0;
+    let any = false;
+
+    for (const [itemId, count] of Object.entries(inventory)) {
+      const item = context.items.get(itemId);
+      if (item === undefined || !item.usableInBattle || count <= 0) continue;
+      any = true;
+      actions.append(
+        button(t('roster.useItem', { name: t(fromData(item.nameKey)), count }), () => {
+          menu = 'root';
+          deps.submit({ type: 'item', itemId, targetIndex });
+        }),
+      );
+    }
+
+    if (!any) {
+      const empty = element('p', 'battle__hint');
+      empty.textContent = t('battle.noItems');
+      actions.append(empty);
+    }
+
+    actions.append(
+      button(t('battle.action.back'), () => {
+        menu = 'root';
+        render(current);
+      }),
+    );
+  }
+
+  /** Riepilogo di fine scontro: esperienza, livelli, evoluzioni. */
+  function renderSummary(): void {
+    const summary = current?.summary;
+    if (summary === undefined) return;
+
+    const box = element('div', 'battle__summary');
+
+    if (summary.xp > 0) {
+      const xp = document.createElement('p');
+      xp.textContent = t('battle.summary.xp', { amount: summary.xp });
+      box.append(xp);
+    }
+
+    for (const levelUp of summary.levelUps) {
+      const line = document.createElement('p');
+      line.textContent = t('battle.summary.levelUp', {
+        name: t(fromData(levelUp.nameKey)),
+        level: levelUp.to,
+      });
+      box.append(line);
+    }
+
+    for (const evolution of summary.evolutions) {
+      const line = element('p', 'battle__evolution');
+      line.textContent = t('battle.summary.evolution', {
+        from: t(fromData(evolution.fromNameKey)),
+        to: t(fromData(evolution.toNameKey)),
+      });
+      box.append(line);
+    }
+
+    if (summary.toStorage) {
+      const line = document.createElement('p');
+      line.textContent = t('battle.summary.toStorage');
+      box.append(line);
+    }
+
+    if (box.childElementCount > 0) actions.append(box);
+  }
+
   function renderActions(): void {
     actions.replaceChildren();
     if (current === undefined) return;
 
     if (current.state.phase === 'over') {
+      renderSummary();
       actions.append(button(t('battle.continue'), deps.end));
       return;
     }
@@ -313,6 +402,7 @@ export function mountBattleUi(root: HTMLElement, deps: BattleUiDeps): BattleUi {
     if (menu === 'moves') renderMoveMenu();
     else if (menu === 'party') renderPartyMenu();
     else if (menu === 'tools') renderToolMenu();
+    else if (menu === 'items') renderItemMenu();
     else renderRootMenu();
   }
 

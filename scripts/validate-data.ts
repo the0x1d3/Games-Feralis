@@ -29,6 +29,7 @@ import {
   creaturesSchema,
   encountersSchema,
   movesSchema,
+  itemsSchema,
   speciesSchema,
   type ParsedSpecies,
 } from './lib/contentChecks';
@@ -211,6 +212,9 @@ const battleParsed = battleSchema.safeParse(
 );
 collectIssues('battle.json', battleParsed);
 
+const itemsParsed = itemsSchema.safeParse(readJson(join(ROOT, 'data', 'items.json'), 'items.json'));
+collectIssues('items.json', itemsParsed);
+
 const encountersParsed = encountersSchema.safeParse(
   readJson(join(ROOT, 'data', 'world', 'encounters.json'), 'encounters.json'),
 );
@@ -238,7 +242,8 @@ if (
   movesParsed.success &&
   creaturesParsed.success &&
   battleParsed.success &&
-  encountersParsed.success
+  encountersParsed.success &&
+  itemsParsed.success
 ) {
   errors.push(
     ...checkContent({
@@ -247,6 +252,7 @@ if (
       battle: battleParsed.data,
       creatures: creaturesParsed.data,
       encounters: encountersParsed.data,
+      items: itemsParsed.data,
       translationKeys: referenceKeys,
       knownZones: new Set(maps.keys()),
     }),
@@ -263,6 +269,7 @@ if (creaturesParsed.success) {
   for (const trait of creaturesParsed.data.traits) usedKeys.add(trait.nameKey);
 }
 if (battleParsed.success) for (const tool of battleParsed.data.tools) usedKeys.add(tool.nameKey);
+if (itemsParsed.success) for (const entry of itemsParsed.data.items) usedKeys.add(entry.nameKey);
 
 // Le chiavi passate a t() tramite variabile (nomi di zona, testi dei cartelli)
 // non compaiono nella scansione letterale: qui si contano come usate.

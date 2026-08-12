@@ -1,10 +1,23 @@
-import type { CreatureInstance } from '@domain/creature/instance';
+import { maxHp, type CreatureInstance } from '@domain/creature/instance';
+import {
+  admit,
+  findInRoster,
+  moveToParty,
+  moveToStorage,
+  rename,
+  replaceCreature,
+  swapParty,
+  type Roster,
+} from '@domain/creature/roster';
+import type { Species } from '@domain/creature/species';
+import type { CreatureConfig } from '@domain/creature/stats';
+import { applyItem, type ItemDef } from '@domain/economy/items';
 import type { RngStreamStates } from '@domain/rng';
 import { advanceClock } from '@domain/world/time';
 import type { WorldConfig } from '@domain/world/config';
 import { type MoveInput, stepActor } from '@domain/world/movement';
 import type { Zone } from '@domain/world/zone';
-import { archiveWith, type GameState } from './gameState';
+import { archiveWith, rosterOf, type GameState } from './gameState';
 
 /**
  * Store minimo: azioni in ingresso, stato nuovo in uscita, ascoltatori
@@ -25,15 +38,23 @@ export type GameAction =
     }
   | { readonly type: 'setFlag'; readonly key: string; readonly value: boolean }
   | { readonly type: 'markSaved'; readonly at: number }
-  /** Un Ferale entra in squadra: il regalo iniziale o una cattura. */
+  /** Un Ferale entra in squadra, o in deposito se la squadra è piena. */
   | {
       readonly type: 'grantCreature';
       readonly creature: CreatureInstance;
       readonly caught: boolean;
     }
-  /** La squadra torna dal combattimento con HP e stati aggiornati. */
-  | { readonly type: 'updateParty'; readonly party: readonly CreatureInstance[] }
+  /** Squadra e deposito insieme: esiti di combattimento, livelli, evoluzioni. */
+  | { readonly type: 'setRoster'; readonly roster: Roster }
+  | { readonly type: 'moveToParty'; readonly uid: string }
+  | { readonly type: 'moveToStorage'; readonly uid: string }
+  | { readonly type: 'swapParty'; readonly a: number; readonly b: number }
+  | { readonly type: 'renameCreature'; readonly uid: string; readonly nickname: string }
+  /** Usa un consumabile. Se non ha effetto, non viene consumato. */
+  | { readonly type: 'useItem'; readonly itemId: string; readonly uid: string }
   | { readonly type: 'seeSpecies'; readonly speciesId: string }
+  /** Registra una cattura nell'archivio e nelle statistiche. */
+  | { readonly type: 'countCapture'; readonly speciesId: string }
   | { readonly type: 'consumeItem'; readonly itemId: string; readonly amount: number }
   | { readonly type: 'battleWon' }
   /** Rimette nello stato la posizione degli stream dopo che il gioco li ha usati. */
@@ -44,6 +65,9 @@ export interface ReducerDeps {
   readonly zones: ReadonlyMap<string, Zone>;
   /** Da `battle.json`: quanti Ferali stanno in squadra. */
   readonly partySize: number;
+  readonly species: ReadonlyMap<string, Species>;
+  readonly creatures: CreatureConfig;
+  readonly items: ReadonlyMap<string, ItemDef>;
 }
 
 function requireZone(deps: ReducerDeps, zoneId: string): Zone {
@@ -101,12 +125,13 @@ export function createReducer(deps: ReducerDeps) {
         return { ...state, lastSavedAt: action.at };
 
       case 'grantCreature': {
-        // Oltre la dimensione della squadra il Ferale andrebbe nel deposito,
-        // che arriva in Fase 3: fino ad allora la squadra è il limite.
-        if (state.party.length >= deps.partySize) return state;
+        // In squadra se c'è posto, altrimenti in deposito: catturare non deve
+        // mai essere un'azione che non produce nulla.
+        const roster = admit(rosterOf(state), action.creature, deps.partySize);
         return {
           ...state,
-          party: [...state.party, action.creature],
+          party: roster.party,
+          storage: roster.storage,
           archive: archiveWith(state.archive, action.creature.speciesId, {
             seen: true,
             caught: action.caught ? 1 : 0,
@@ -118,11 +143,69 @@ export function createReducer(deps: ReducerDeps) {
         };
       }
 
-      case 'updateParty':
-        return { ...state, party: action.party };
+      case 'setRoster':
+        return { ...state, party: action.roster.party, storage: action.roster.storage };
+
+      case 'moveToParty': {
+        const result = moveToParty(rosterOf(state), action.uid, deps.partySize);
+        if (!result.changed) return state;
+        return { ...state, party: result.roster.party, storage: result.roster.storage };
+      }
+
+      case 'moveToStorage': {
+        const result = moveToStorage(rosterOf(state), action.uid);
+        if (!result.changed) return state;
+        return { ...state, party: result.roster.party, storage: result.roster.storage };
+      }
+
+      case 'swapParty': {
+        const result = swapParty(rosterOf(state), action.a, action.b);
+        if (!result.changed) return state;
+        return { ...state, party: result.roster.party };
+      }
+
+      case 'renameCreature': {
+        const result = rename(rosterOf(state), action.uid, action.nickname);
+        if (!result.changed) return state;
+        return { ...state, party: result.roster.party, storage: result.roster.storage };
+      }
+
+      case 'useItem': {
+        const item = deps.items.get(action.itemId);
+        const roster = rosterOf(state);
+        const target = findInRoster(roster, action.uid);
+        if (item === undefined || target === undefined) return state;
+        if ((state.inventory[action.itemId] ?? 0) <= 0) return state;
+
+        const species = deps.species.get(target.speciesId);
+        if (species === undefined) return state;
+
+        const use = applyItem(item, target, maxHp(target, species, deps.creatures));
+        // Un oggetto che non ha effetto non viene consumato: sprecarlo per una
+        // distrazione è frustrazione gratuita.
+        if (!use.applied) return state;
+
+        const next = replaceCreature(roster, use.creature);
+        return {
+          ...state,
+          party: next.party,
+          storage: next.storage,
+          inventory: {
+            ...state.inventory,
+            [action.itemId]: (state.inventory[action.itemId] ?? 0) - 1,
+          },
+        };
+      }
 
       case 'seeSpecies':
         return { ...state, archive: archiveWith(state.archive, action.speciesId, { seen: true }) };
+
+      case 'countCapture':
+        return {
+          ...state,
+          archive: archiveWith(state.archive, action.speciesId, { seen: true, caught: 1 }),
+          stats: { ...state.stats, creaturesCaught: state.stats.creaturesCaught + 1 },
+        };
 
       case 'consumeItem': {
         const left = Math.max(0, (state.inventory[action.itemId] ?? 0) - action.amount);

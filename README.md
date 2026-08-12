@@ -18,16 +18,17 @@ collezionare doppioni: è cercare lo strumento giusto.
 
 ## Stato
 
-**Fase 2 — Combattimento e cattura.** Tre zone percorribili (Costa, Bosco, Altopiano),
-ciclo giorno/notte da 24 minuti reali, incontri nell'erba alta, combattimento a turni
-con barra ATB, sei tipi in due triangoli, otto specie di Ferali, e la cattura con la
-percentuale **visibile prima di lanciare il Nodo**.
+**Fase 3 — Squadra, archivio, inventario.** Tre zone percorribili (Costa, Bosco,
+Altopiano), ciclo giorno/notte da 24 minuti reali, incontri nell'erba alta,
+combattimento a turni con barra ATB, sei tipi in due triangoli, undici specie con
+tre linee evolutive, cattura con la percentuale **visibile prima di lanciare il
+Nodo**, deposito, esperienza, livelli e soprannomi.
 
-Squadra, archivio ed esperienza si completano nella Fase 3. La roadmap è in
+La Radura e l'automazione arrivano nella Fase 4. La roadmap è in
 [`docs/PDR.md`](docs/PDR.md) §7.
 
-Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire. In
-combattimento si gioca con il mouse o con Tab e Invio.
+Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire, **S**
+per la squadra, **Esc** per chiudere. Tutto è raggiungibile da tastiera.
 
 ## Sviluppo
 

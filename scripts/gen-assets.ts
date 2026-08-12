@@ -291,6 +291,30 @@ const CREATURES: readonly CreatureLook[] = [
     feature: 'antlers',
     scale: 1.0,
   },
+  // Forme evolute: stessa famiglia cromatica del predecessore, ma più grandi e
+  // con l'accento più marcato. Si devono riconoscere a colpo d'occhio come
+  // "quello di prima, cresciuto".
+  {
+    id: 'verdant_stalk',
+    body: [78, 146, 70, 255],
+    accent: [40, 96, 44, 255],
+    feature: 'leaves',
+    scale: 1.06,
+  },
+  {
+    id: 'cinder_hound',
+    body: [188, 92, 44, 255],
+    accent: [124, 48, 28, 255],
+    feature: 'ears',
+    scale: 1.04,
+  },
+  {
+    id: 'tide_lancer',
+    body: [56, 122, 176, 255],
+    accent: [28, 74, 122, 255],
+    feature: 'fin',
+    scale: 1.08,
+  },
 ];
 
 function paintCreature(r: Raster, ox: number, look: CreatureLook): void {

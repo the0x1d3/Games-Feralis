@@ -1,0 +1,20 @@
+{
+  "id": "cinder_hound",
+  "nameKey": "species.cinder_hound",
+  "types": ["fuoco"],
+  "baseStats": { "hp": 1090, "att": 86, "dif": 66, "vel": 76, "ele": 78, "res": 62 },
+  "growthCurve": "fast",
+  "work": { "flame": 3, "gathering": 2 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "favilla", "level": 1 },
+    { "moveId": "morso", "level": 7 },
+    { "moveId": "vampata", "level": 12 },
+    { "moveId": "scossone", "level": 20 }
+  ],
+  "baseCatchRate": 0.4,
+  "rarity": "rare",
+  "spawn": [],
+  "size": "M",
+  "sprite": { "atlas": "creatures", "key": "cinder_hound", "frame": 9 }
+}

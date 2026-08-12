@@ -1,0 +1,20 @@
+{
+  "id": "tide_lancer",
+  "nameKey": "species.tide_lancer",
+  "types": ["acqua"],
+  "baseStats": { "hp": 1130, "att": 66, "dif": 70, "vel": 84, "ele": 86, "res": 76 },
+  "growthCurve": "medium",
+  "work": { "water": 3, "farming": 2 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "spruzzo", "level": 1 },
+    { "moveId": "raffica", "level": 6 },
+    { "moveId": "torrente", "level": 11 },
+    { "moveId": "scossa", "level": 19 }
+  ],
+  "baseCatchRate": 0.4,
+  "rarity": "rare",
+  "spawn": [],
+  "size": "L",
+  "sprite": { "atlas": "creatures", "key": "tide_lancer", "frame": 10 }
+}

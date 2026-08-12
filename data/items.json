@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "id": "bacca_verde",
+      "nameKey": "item.bacca_verde",
+      "kind": "heal",
+      "amount": 300,
+      "usableInBattle": true
+    },
+    {
+      "id": "bacca_ambra",
+      "nameKey": "item.bacca_ambra",
+      "kind": "heal",
+      "amount": 900,
+      "usableInBattle": true
+    },
+    {
+      "id": "resina_calma",
+      "nameKey": "item.resina_calma",
+      "kind": "cure",
+      "usableInBattle": true
+    },
+    {
+      "id": "essenza_viva",
+      "nameKey": "item.essenza_viva",
+      "kind": "revive",
+      "fraction": 0.5,
+      "usableInBattle": false
+    }
+  ]
+}

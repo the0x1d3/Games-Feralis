@@ -71,6 +71,9 @@ export async function startSession(options: SessionOptions): Promise<Session> {
     config: world.config,
     zones: world.zones,
     partySize: content.battle.partySize,
+    species: content.species,
+    creatures: content.creatures,
+    items: content.items,
   });
 
   /*

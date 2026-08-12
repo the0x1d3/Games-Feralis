@@ -1,6 +1,7 @@
 import type { BattleEvent, Side } from '@domain/battle/state';
 import { effectivenessOf } from '@domain/battle/typechart';
 import type { Move, Species } from '@domain/creature/species';
+import type { ItemDef } from '@domain/economy/items';
 import { t, type TranslationKey } from '@i18n/index';
 
 /**
@@ -15,6 +16,9 @@ import { t, type TranslationKey } from '@i18n/index';
 export interface LogNaming {
   speciesOf(side: Side): Species | undefined;
   moveById(moveId: string): Move | undefined;
+  itemById(itemId: string): ItemDef | undefined;
+  /** Nome del Ferale nello slot indicato della squadra. */
+  partyNameAt(index: number): string | undefined;
 }
 
 /** Le chiavi che arrivano dai file di `/data` sono validate in CI (ADR 0003). */
@@ -92,6 +96,17 @@ export function formatEvent(event: BattleEvent, naming: LogNaming): string[] {
           : t('battle.log.captureFailed', { name }),
       );
       return lines;
+    }
+
+    case 'item': {
+      if (!event.applied) return [t('battle.log.itemFailed')];
+      const item = naming.itemById(event.itemId);
+      return [
+        t('battle.log.item', {
+          name: item === undefined ? event.itemId : t(fromData(item.nameKey)),
+          target: naming.partyNameAt(event.targetIndex) ?? '?',
+        }),
+      ];
     }
 
     case 'flee':

@@ -12,6 +12,7 @@ const SAVE: GameState = {
   rngStreams: { world: 111, battle: 222, loot: 333, breeding: 444 },
   player: { zoneId: 'bosco', x: 624.5, y: 880.25, facing: 'left' },
   world: { gameTimeMs: 1_234_567 },
+  storage: [],
   party: [
     {
       uid: 'abc123def456',

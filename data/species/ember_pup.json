@@ -2,21 +2,59 @@
   "id": "ember_pup",
   "nameKey": "species.ember_pup",
   "types": ["fuoco"],
-  "baseStats": { "hp": 900, "att": 64, "dif": 50, "vel": 60, "ele": 60, "res": 48 },
+  "baseStats": {
+    "hp": 900,
+    "att": 64,
+    "dif": 50,
+    "vel": 60,
+    "ele": 60,
+    "res": 48
+  },
   "growthCurve": "fast",
-  "work": { "flame": 2, "gathering": 1 },
+  "work": {
+    "flame": 2,
+    "gathering": 1
+  },
   "movepool": [
-    { "moveId": "colpo", "level": 1 },
-    { "moveId": "favilla", "level": 1 },
-    { "moveId": "morso", "level": 7 },
-    { "moveId": "vampata", "level": 12 }
+    {
+      "moveId": "colpo",
+      "level": 1
+    },
+    {
+      "moveId": "favilla",
+      "level": 1
+    },
+    {
+      "moveId": "morso",
+      "level": 7
+    },
+    {
+      "moveId": "vampata",
+      "level": 12
+    }
   ],
-  "baseCatchRate": 1.0,
+  "baseCatchRate": 1,
   "rarity": "common",
+  "evolution": {
+    "toId": "cinder_hound",
+    "level": 13
+  },
   "spawn": [
-    { "biome": "bosco", "timeOfDay": "day", "weight": 25 },
-    { "biome": "altopiano", "timeOfDay": "any", "weight": 30 }
+    {
+      "biome": "bosco",
+      "timeOfDay": "day",
+      "weight": 25
+    },
+    {
+      "biome": "altopiano",
+      "timeOfDay": "any",
+      "weight": 30
+    }
   ],
   "size": "S",
-  "sprite": { "atlas": "creatures", "key": "ember_pup", "frame": 2 }
+  "sprite": {
+    "atlas": "creatures",
+    "key": "ember_pup",
+    "frame": 2
+  }
 }

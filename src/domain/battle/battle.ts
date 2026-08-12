@@ -5,7 +5,14 @@ import { computeStats } from '../creature/stats';
 import { createRng, type RngState } from '../rng';
 import { decide, type AiActor, type AiBench, type AiLevel } from './ai';
 import { advanceAtb, isReady } from './atb';
-import { resolveCapture, resolveFlee, resolveMove, resolveSwitch, settleFaints } from './resolve';
+import {
+  resolveCapture,
+  resolveFlee,
+  resolveItem,
+  resolveMove,
+  resolveSwitch,
+  settleFaints,
+} from './resolve';
 import {
   activeOf,
   isDown,
@@ -33,6 +40,7 @@ export type BattleAction =
   | { readonly type: 'move'; readonly moveId: string }
   | { readonly type: 'switch'; readonly index: number }
   | { readonly type: 'capture'; readonly toolId: string }
+  | { readonly type: 'item'; readonly itemId: string; readonly targetIndex: number }
   | { readonly type: 'flee' };
 
 export interface CreateBattleOptions {
@@ -218,6 +226,8 @@ export function reduceBattle(
       return resolveSwitch(running, 'player', action.index, context);
     case 'capture':
       return { ...resolveCapture(running, action.toolId, context, rng), rngState: rng.getState() };
+    case 'item':
+      return resolveItem(running, action.itemId, action.targetIndex, context);
     case 'flee':
       return { ...resolveFlee(running, context, rng), rngState: rng.getState() };
   }

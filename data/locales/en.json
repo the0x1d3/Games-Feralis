@@ -1,7 +1,6 @@
 {
   "app.title": "Feralis",
   "app.tagline": "Nothing is ever truly tamed.",
-
   "hud.zone": "Zone",
   "hud.time": "Time",
   "hud.dayAndTime": "Day {day} · {time}",
@@ -11,22 +10,17 @@
   "hud.phase.night": "Night",
   "hud.saved": "Game saved",
   "hud.saving": "Saving…",
-  "hud.controls": "Arrows or WASD to move · E or Space to interact · The game saves itself",
+  "hud.controls": "Arrows or WASD to move · E or Space to interact · S for your team",
   "hud.party": "Team",
-
   "storage.fallback": "This browser will not grant persistent storage: your game is kept in local memory and may be lost if you clear the site data.",
-
   "dialog.close": "Close",
-
   "world.zone.costa": "Coast",
   "world.zone.bosco": "Woods",
   "world.zone.altopiano": "Highland",
-
   "world.sign.beach": "You woke up here, with no memories and no Ferals. The path north leads into the woods.",
   "world.sign.totem": "A wooden deck, laid by someone before you. It would make a good Clearing, once you know how to build one.",
   "world.sign.forest": "Dense woods. Trees cannot be crossed, and neither can boulders: you will need Ferals with the right work skills.",
   "world.sign.highland": "Highland. The air turns cold and the cliffs close the way: from here on you will need equipment.",
-
   "type.neutro": "Neutral",
   "type.flora": "Flora",
   "type.acqua": "Water",
@@ -34,7 +28,6 @@
   "type.fulmine": "Lightning",
   "type.vento": "Wind",
   "type.terra": "Earth",
-
   "species.dew_sprout": "Dewsprout",
   "species.tide_fin": "Tidefin",
   "species.ember_pup": "Emberpup",
@@ -43,7 +36,6 @@
   "species.chalk_mite": "Chalkmite",
   "species.spark_moth": "Sparkmoth",
   "species.pyre_stag": "Pyrestag",
-
   "move.colpo": "Strike",
   "move.morso": "Bite",
   "move.favilla": "Spark",
@@ -56,13 +48,11 @@
   "move.raffica": "Gust",
   "move.sassata": "Pebble",
   "move.scossone": "Quake",
-
   "status.burned": "Burned",
   "status.wet": "Wet",
   "status.paralyzed": "Paralysed",
   "status.rooted": "Rooted",
   "status.stunned": "Stunned",
-
   "trait.fragile": "Frail",
   "trait.robusto": "Sturdy",
   "trait.furioso": "Furious",
@@ -71,12 +61,10 @@
   "trait.tenace": "Tenacious",
   "trait.mattiniero": "Early riser",
   "trait.notturno": "Nocturnal",
-
   "item.nodo_base": "Knot",
   "item.nodo_migliorato": "Woven Knot",
   "item.nodo_superiore": "Master Knot",
   "item.nodo_notturno": "Shadow Knot",
-
   "battle.encounter": "A wild {name} blocks your way!",
   "battle.wild": "Wild",
   "battle.yours": "Your team",
@@ -85,22 +73,18 @@
   "battle.hp": "HP",
   "battle.turnPrompt": "{name}'s turn: what now?",
   "battle.waiting": "…",
-
   "battle.action.fight": "Fight",
   "battle.action.switch": "Switch",
   "battle.action.catch": "Knot",
   "battle.action.flee": "Flee",
   "battle.action.back": "Back",
-
   "battle.catchHint": "Weakening it and landing a status matters more than any Knot.",
   "battle.toolCount": "{name} ×{count}",
   "battle.toolNightOnly": "{name} — night only",
   "battle.noTools": "You have no Knots with you.",
   "battle.partyFull": "Your team is full: storage arrives in Phase 3.",
-
   "battle.effect.super": "Very effective",
   "battle.effect.weak": "Not very effective",
-
   "battle.log.move": "{name} uses {move}.",
   "battle.log.damage": "{name} takes {amount} HP of damage.",
   "battle.log.missed": "{name} misses.",
@@ -117,15 +101,46 @@
   "battle.log.captureFailed": "{name} breaks free.",
   "battle.log.fleeSuccess": "You get away.",
   "battle.log.fleeFailed": "You cannot get away.",
-
   "battle.outcome.won": "You won the fight.",
   "battle.outcome.lost": "Your team is spent. You retrace your steps.",
   "battle.outcome.captured": "{name} joins you.",
   "battle.outcome.fled": "You fled.",
   "battle.continue": "Continue",
-
   "ui.skipToContent": "Skip to content",
   "ui.language": "Language",
   "locale.it": "Italiano",
-  "locale.en": "English"
+  "locale.en": "English",
+  "species.verdant_stalk": "Verdantstalk",
+  "species.cinder_hound": "Cinderhound",
+  "species.tide_lancer": "Tidelancer",
+  "item.bacca_verde": "Green berry",
+  "item.bacca_ambra": "Amber berry",
+  "item.resina_calma": "Calming resin",
+  "item.essenza_viva": "Living essence",
+  "roster.title": "Team",
+  "roster.close": "Close",
+  "roster.tab.party": "Team",
+  "roster.tab.storage": "Storage",
+  "roster.tab.archive": "Archive",
+  "roster.empty": "Nobody here.",
+  "roster.level": "Lv. {level}",
+  "roster.toStorage": "Send to storage",
+  "roster.toParty": "Add to team",
+  "roster.moveUp": "Move up",
+  "roster.moveDown": "Move down",
+  "roster.rename": "Rename",
+  "roster.useItem": "{name} ×{count}",
+  "roster.evolutionReady": "Ready to evolve",
+  "archive.progress": "{seen} species met out of {total}",
+  "archive.caught": "Caught: {count}",
+  "archive.notSeen": "Never met",
+  "archive.unknown": "???",
+  "battle.action.item": "Items",
+  "battle.log.item": "You use {name} on {target}.",
+  "battle.log.itemFailed": "That would do nothing right now.",
+  "battle.summary.xp": "{amount} experience points.",
+  "battle.summary.levelUp": "{name} reaches level {level}!",
+  "battle.summary.evolution": "{from} becomes {to}!",
+  "battle.summary.toStorage": "Your team is full: it goes to storage.",
+  "battle.noItems": "You have no items to use here."
 }

@@ -1,6 +1,7 @@
 import type { Rng } from '../rng';
 import { attemptCapture } from './capture';
 import { computeDamage } from './damage';
+import { resolveItemEffect } from '../economy/items';
 import {
   applyStatus,
   decayStatus,
@@ -234,6 +235,51 @@ export function resolveCapture(
 
   // Il tentativo costa il turno anche quando fallisce: senza costo, tentare
   // sarebbe sempre la mossa migliore e la cattura smetterebbe di essere un puzzle.
+  return { ...spendTurn(next, 'player'), turn: next.turn + 1 };
+}
+
+/**
+ * Usa un consumabile su un membro della squadra.
+ *
+ * Costa il turno, come la cattura: curarsi gratis renderebbe ogni scontro una
+ * gara di scorte invece che di scelte. Se l'oggetto non ha effetto il turno
+ * **non** si perde, e chi chiama non lo consuma.
+ */
+export function resolveItem(
+  state: BattleState,
+  itemId: string,
+  targetIndex: number,
+  context: BattleContext,
+): BattleState {
+  const item = context.items.get(itemId);
+  const team = state.player;
+  const target = team.members[targetIndex];
+
+  if (item === undefined || !item.usableInBattle || target === undefined) {
+    return log(state, { kind: 'item', itemId, targetIndex, applied: false });
+  }
+
+  const effect = resolveItemEffect(item, {
+    hp: target.hp,
+    maxHp: target.stats.hp,
+    hasStatus: target.status !== undefined,
+  });
+
+  if (!effect.applied) {
+    return log(state, { kind: 'item', itemId, targetIndex, applied: false });
+  }
+
+  const updated = withTeam(
+    state,
+    'player',
+    replaceMember(team, targetIndex, (member) => ({
+      ...member,
+      hp: effect.hp ?? member.hp,
+      status: effect.clearStatus === true ? undefined : member.status,
+    })),
+  );
+
+  const next = log(updated, { kind: 'item', itemId, targetIndex, applied: true });
   return { ...spendTurn(next, 'player'), turn: next.turn + 1 };
 }
 

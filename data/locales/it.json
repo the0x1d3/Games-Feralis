@@ -1,7 +1,6 @@
 {
   "app.title": "Feralis",
   "app.tagline": "Nulla si doma davvero.",
-
   "hud.zone": "Zona",
   "hud.time": "Ora",
   "hud.dayAndTime": "Giorno {day} · {time}",
@@ -11,22 +10,17 @@
   "hud.phase.night": "Notte",
   "hud.saved": "Partita salvata",
   "hud.saving": "Salvataggio…",
-  "hud.controls": "Frecce o WASD per muoverti · E o Spazio per interagire · La partita si salva da sola",
+  "hud.controls": "Frecce o WASD per muoverti · E o Spazio per interagire · S per la squadra",
   "hud.party": "Squadra",
-
   "storage.fallback": "Questo browser non concede l'archiviazione permanente: la partita viene tenuta nella memoria locale e può andare persa se svuoti i dati del sito.",
-
   "dialog.close": "Chiudi",
-
   "world.zone.costa": "Costa",
   "world.zone.bosco": "Bosco",
   "world.zone.altopiano": "Altopiano",
-
   "world.sign.beach": "Ti sei svegliato qui, senza ricordi e senza Ferali. Il sentiero a nord entra nel bosco.",
   "world.sign.totem": "Un assito piantato da qualcuno prima di te. Sarebbe un buon posto per una Radura, quando saprai costruirne una.",
   "world.sign.forest": "Bosco fitto. Gli alberi non si attraversano e i massi nemmeno: serviranno Ferali con le mansioni giuste.",
   "world.sign.highland": "Altopiano. L'aria si fa fredda e le rupi chiudono il passo: da qui in avanti servirà equipaggiamento.",
-
   "type.neutro": "Neutro",
   "type.flora": "Flora",
   "type.acqua": "Acqua",
@@ -34,7 +28,6 @@
   "type.fulmine": "Fulmine",
   "type.vento": "Vento",
   "type.terra": "Terra",
-
   "species.dew_sprout": "Rugiadello",
   "species.tide_fin": "Marespina",
   "species.ember_pup": "Braciotto",
@@ -43,7 +36,6 @@
   "species.chalk_mite": "Gessacaro",
   "species.spark_moth": "Falenalampo",
   "species.pyre_stag": "Cervopira",
-
   "move.colpo": "Colpo",
   "move.morso": "Morso",
   "move.favilla": "Favilla",
@@ -56,13 +48,11 @@
   "move.raffica": "Raffica",
   "move.sassata": "Sassata",
   "move.scossone": "Scossone",
-
   "status.burned": "Bruciato",
   "status.wet": "Bagnato",
   "status.paralyzed": "Paralizzato",
   "status.rooted": "Radicato",
   "status.stunned": "Stordito",
-
   "trait.fragile": "Fragile",
   "trait.robusto": "Robusto",
   "trait.furioso": "Furioso",
@@ -71,12 +61,10 @@
   "trait.tenace": "Tenace",
   "trait.mattiniero": "Mattiniero",
   "trait.notturno": "Notturno",
-
   "item.nodo_base": "Nodo",
   "item.nodo_migliorato": "Nodo intrecciato",
   "item.nodo_superiore": "Nodo maestro",
   "item.nodo_notturno": "Nodo d'ombra",
-
   "battle.encounter": "Un {name} selvatico ti sbarra la strada!",
   "battle.wild": "Selvatico",
   "battle.yours": "La tua squadra",
@@ -85,22 +73,18 @@
   "battle.hp": "PV",
   "battle.turnPrompt": "Tocca a {name}: cosa fa?",
   "battle.waiting": "…",
-
   "battle.action.fight": "Combatti",
   "battle.action.switch": "Cambia",
   "battle.action.catch": "Nodo",
   "battle.action.flee": "Fuggi",
   "battle.action.back": "Indietro",
-
   "battle.catchHint": "Indebolirlo e applicargli uno stato conta più di qualunque Nodo.",
   "battle.toolCount": "{name} ×{count}",
   "battle.toolNightOnly": "{name} — solo di notte",
   "battle.noTools": "Non hai Nodi con te.",
   "battle.partyFull": "La squadra è al completo: il deposito arriva nella Fase 3.",
-
   "battle.effect.super": "Molto efficace",
   "battle.effect.weak": "Poco efficace",
-
   "battle.log.move": "{name} usa {move}.",
   "battle.log.damage": "{name} subisce {amount} PV di danno.",
   "battle.log.missed": "{name} manca il bersaglio.",
@@ -117,15 +101,46 @@
   "battle.log.captureFailed": "{name} si libera.",
   "battle.log.fleeSuccess": "Riesci ad allontanarti.",
   "battle.log.fleeFailed": "Non riesci ad allontanarti.",
-
   "battle.outcome.won": "Hai vinto lo scontro.",
   "battle.outcome.lost": "La tua squadra è esausta. Torni sui tuoi passi.",
   "battle.outcome.captured": "{name} si unisce a te.",
   "battle.outcome.fled": "Sei fuggito.",
   "battle.continue": "Continua",
-
   "ui.skipToContent": "Vai al contenuto",
   "ui.language": "Lingua",
   "locale.it": "Italiano",
-  "locale.en": "English"
+  "locale.en": "English",
+  "species.verdant_stalk": "Verdegambo",
+  "species.cinder_hound": "Braciacane",
+  "species.tide_lancer": "Marelancia",
+  "item.bacca_verde": "Bacca verde",
+  "item.bacca_ambra": "Bacca d'ambra",
+  "item.resina_calma": "Resina calma",
+  "item.essenza_viva": "Essenza viva",
+  "roster.title": "Squadra",
+  "roster.close": "Chiudi",
+  "roster.tab.party": "Squadra",
+  "roster.tab.storage": "Deposito",
+  "roster.tab.archive": "Archivio",
+  "roster.empty": "Qui non c'è nessuno.",
+  "roster.level": "Liv. {level}",
+  "roster.toStorage": "Manda in deposito",
+  "roster.toParty": "Porta in squadra",
+  "roster.moveUp": "Sposta su",
+  "roster.moveDown": "Sposta giù",
+  "roster.rename": "Rinomina",
+  "roster.useItem": "{name} ×{count}",
+  "roster.evolutionReady": "Pronto a evolvere",
+  "archive.progress": "{seen} specie incontrate su {total}",
+  "archive.caught": "Catturati: {count}",
+  "archive.notSeen": "Mai incontrato",
+  "archive.unknown": "???",
+  "battle.action.item": "Oggetti",
+  "battle.log.item": "Usi {name} su {target}.",
+  "battle.log.itemFailed": "Non serve a niente adesso.",
+  "battle.summary.xp": "{amount} punti esperienza.",
+  "battle.summary.levelUp": "{name} sale al livello {level}!",
+  "battle.summary.evolution": "{from} si trasforma in {to}!",
+  "battle.summary.toStorage": "La squadra è piena: va in deposito.",
+  "battle.noItems": "Non hai oggetti da usare qui."
 }

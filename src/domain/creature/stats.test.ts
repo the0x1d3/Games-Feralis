@@ -96,9 +96,9 @@ describe('computeStats', () => {
 
 describe('xpToNextLevel', () => {
   it('cresce con il livello e con la curva', () => {
-    expect(xpToNextLevel(sprout, 10)).toBeGreaterThan(xpToNextLevel(sprout, 5));
+    expect(xpToNextLevel(sprout, 10, config)).toBeGreaterThan(xpToNextLevel(sprout, 5, config));
     // stone_grub ha curva "slow", dew_sprout "medium".
-    expect(xpToNextLevel(grub, 10)).toBeGreaterThan(xpToNextLevel(sprout, 10));
+    expect(xpToNextLevel(grub, 10, config)).toBeGreaterThan(xpToNextLevel(sprout, 10, config));
   });
 });
 

@@ -56,15 +56,16 @@ export const speciesSchema = z.object({
     .min(1),
   baseCatchRate: z.number().min(0).max(1),
   rarity: z.enum(RARITIES),
-  spawn: z
-    .array(
-      z.object({
-        biome: z.string().min(1),
-        timeOfDay: z.enum(['any', 'day', 'night']),
-        weight: z.number().positive(),
-      }),
-    )
-    .min(1),
+  evolution: z.object({ toId: z.string().min(1), level: z.number().int().positive() }).optional(),
+  // Una lista vuota è legittima: le forme evolute non compaiono in natura, si
+  // ottengono solo crescendo il predecessore.
+  spawn: z.array(
+    z.object({
+      biome: z.string().min(1),
+      timeOfDay: z.enum(['any', 'day', 'night']),
+      weight: z.number().positive(),
+    }),
+  ),
   size: z.enum(['S', 'M', 'L']),
   sprite: z.object({
     atlas: z.string().min(1),
@@ -84,6 +85,19 @@ export const creaturesSchema = z.object({
   }),
   rarity: z.record(z.enum(RARITIES), z.object({ baseCatchRate: z.number().min(0).max(1) })),
   alpha: z.object({ statMultiplier: z.number().positive() }),
+  xp: z.object({
+    curve: z.object({
+      fast: z.number().positive(),
+      medium: z.number().positive(),
+      slow: z.number().positive(),
+    }),
+    quadratic: z.number().positive(),
+    linear: z.number().min(0),
+    flat: z.number().min(0),
+    fromDefeat: z.number().positive(),
+    alphaMultiplier: z.number().min(1),
+    partyShare: z.number().min(0).max(1),
+  }),
   traitCount: z.object({
     none: z.number().min(0).max(1),
     one: z.number().min(0).max(1),
@@ -146,6 +160,21 @@ export const battleSchema = z.object({
   }),
 });
 
+export const itemsSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z][a-z0-9_]*$/, 'id in snake_case'),
+        nameKey: z.string().min(1),
+        kind: z.enum(['heal', 'cure', 'revive']),
+        amount: z.number().positive().optional(),
+        fraction: z.number().min(0).max(1).optional(),
+        usableInBattle: z.boolean(),
+      }),
+    )
+    .min(1),
+});
+
 export const encountersSchema = z.object({
   chancePerStep: z.number().min(0).max(1),
   stepDistancePx: z.number().positive(),
@@ -162,12 +191,15 @@ export type ParsedBattle = z.infer<typeof battleSchema>;
 export type ParsedCreatures = z.infer<typeof creaturesSchema>;
 export type ParsedEncounters = z.infer<typeof encountersSchema>;
 
+export type ParsedItems = z.infer<typeof itemsSchema>;
+
 export interface ContentCheckInput {
   readonly species: ReadonlyMap<string, ParsedSpecies>;
   readonly moves: ParsedMoves;
   readonly battle: ParsedBattle;
   readonly creatures: ParsedCreatures;
   readonly encounters: ParsedEncounters;
+  readonly items: ParsedItems;
   readonly translationKeys: ReadonlySet<string>;
   readonly knownZones: ReadonlySet<string>;
 }
@@ -216,6 +248,15 @@ export function checkContent(input: ContentCheckInput): string[] {
   for (const move of input.moves.moves) key(move.nameKey, `moves.json/${move.id}`);
   for (const trait of input.creatures.traits) key(trait.nameKey, `creatures.json/${trait.id}`);
   for (const tool of input.battle.tools) key(tool.nameKey, `battle.json/${tool.id}`);
+  for (const entry of input.items.items) {
+    key(entry.nameKey, `items.json/${entry.id}`);
+    if (entry.kind === 'heal' && entry.amount === undefined) {
+      errors.push(`items.json/${entry.id}: un oggetto curativo senza "amount" non fa nulla`);
+    }
+    if (entry.kind === 'revive' && entry.fraction === undefined) {
+      errors.push(`items.json/${entry.id}: una rianimazione senza "fraction" non fa nulla`);
+    }
+  }
 
   errors.push(...checkTypeTriangles(input.battle));
 
@@ -261,6 +302,32 @@ export function checkContent(input: ContentCheckInput): string[] {
     for (const spawn of entry.spawn) {
       if (!input.knownZones.has(spawn.biome)) {
         errors.push(`species/${id}: compare nel bioma "${spawn.biome}", che non ha una mappa`);
+      }
+    }
+
+    /*
+     * Un'evoluzione rotta si manifesta solo al livello soglia, cioè settimane
+     * dopo l'errore e dentro il salvataggio di qualcuno.
+     */
+    const evolution = entry.evolution;
+    if (evolution !== undefined) {
+      if (!input.species.has(evolution.toId)) {
+        errors.push(`species/${id}: evolve in "${evolution.toId}", che non esiste`);
+      } else if (evolution.toId === id) {
+        errors.push(`species/${id}: evolve in se stessa`);
+      }
+      if (evolution.level > input.creatures.maxLevel) {
+        errors.push(
+          `species/${id}: evolve al livello ${evolution.level}, oltre il massimo di ${input.creatures.maxLevel}`,
+        );
+      }
+    }
+
+    // Una specie senza spawn e senza nessuno che ci evolva è irraggiungibile.
+    if (entry.spawn.length === 0) {
+      const reachable = [...input.species.values()].some((other) => other.evolution?.toId === id);
+      if (!reachable) {
+        errors.push(`species/${id}: non compare in natura e nessuna specie ci evolve`);
       }
     }
 

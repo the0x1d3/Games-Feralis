@@ -43,14 +43,15 @@ Le correzioni già applicate al PDR originale sono elencate nella sua §0 (Errat
 data/maps/     mappe in formato Tiled (generate, vedi ADR 0005)
 data/species/  una specie per file, id immutabile = nome del file
 data/world/    tiles.json, world.json, encounters.json
-data/          battle.json, creatures.json, moves.json
+data/          battle.json, creatures.json, moves.json, items.json
 data/locales/  traduzioni IT/EN
 scripts/       guardie di CI + generatori: validate-data, size-check,
                boundaries.test, gen-assets, author-maps, balance-sim
 src/domain/    ⭐ logica pura, zero dipendenze impure — è dove vive il gioco
   world/       tempo, collisioni, movimento, interazione, incontri, Tiled
   battle/      ATB, danno, tipi, stati, cattura, IA, macchina a stati
-  creature/    specie, statistiche, generazione degli esemplari
+  creature/    specie, statistiche, esperienza, evoluzione, squadra e deposito
+  economy/     oggetti consumabili
 src/engine/    l'unica cartella che importa Phaser
 src/scenes/    viste: leggono lo stato e disegnano. Nessuna regola di gioco.
 src/state/     store, riduttori, migrazioni, sessione, caricamento contenuti

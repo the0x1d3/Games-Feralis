@@ -2,21 +2,59 @@
   "id": "dew_sprout",
   "nameKey": "species.dew_sprout",
   "types": ["flora"],
-  "baseStats": { "hp": 970, "att": 52, "dif": 58, "vel": 48, "ele": 62, "res": 56 },
+  "baseStats": {
+    "hp": 970,
+    "att": 52,
+    "dif": 58,
+    "vel": 48,
+    "ele": 62,
+    "res": 56
+  },
   "growthCurve": "medium",
-  "work": { "gathering": 2, "farming": 1 },
+  "work": {
+    "gathering": 2,
+    "farming": 1
+  },
   "movepool": [
-    { "moveId": "colpo", "level": 1 },
-    { "moveId": "rampicante", "level": 1 },
-    { "moveId": "spora", "level": 5 },
-    { "moveId": "morso", "level": 9 }
+    {
+      "moveId": "colpo",
+      "level": 1
+    },
+    {
+      "moveId": "rampicante",
+      "level": 1
+    },
+    {
+      "moveId": "spora",
+      "level": 5
+    },
+    {
+      "moveId": "morso",
+      "level": 9
+    }
   ],
-  "baseCatchRate": 1.0,
+  "baseCatchRate": 1,
   "rarity": "common",
+  "evolution": {
+    "toId": "verdant_stalk",
+    "level": 12
+  },
   "spawn": [
-    { "biome": "costa", "timeOfDay": "any", "weight": 30 },
-    { "biome": "bosco", "timeOfDay": "any", "weight": 40 }
+    {
+      "biome": "costa",
+      "timeOfDay": "any",
+      "weight": 30
+    },
+    {
+      "biome": "bosco",
+      "timeOfDay": "any",
+      "weight": 40
+    }
   ],
   "size": "S",
-  "sprite": { "atlas": "creatures", "key": "dew_sprout", "frame": 0 }
+  "sprite": {
+    "atlas": "creatures",
+    "key": "dew_sprout",
+    "frame": 0
+  }
 }
