@@ -15,7 +15,9 @@ import baseData from '@data/base.json';
 import battleData from '@data/battle.json';
 import creatureData from '@data/creatures.json';
 import itemData from '@data/items.json';
+import recipeData from '@data/recipes.json';
 import structureData from '@data/structures.json';
+import techData from '@data/tech.json';
 import dewSprout from '@data/species/dew_sprout.json';
 import verdantStalk from '@data/species/verdant_stalk.json';
 import { parseBaseConfig, parseStructures } from '@domain/base/config';
@@ -23,7 +25,9 @@ import { parseBattleConfig } from '@domain/battle/config';
 import { createCreature } from '@domain/creature/instance';
 import { parseSpecies, type Species } from '@domain/creature/species';
 import { parseCreatureConfig } from '@domain/creature/stats';
+import { parseRecipes } from '@domain/economy/crafting';
 import { parseItems } from '@domain/economy/items';
+import { parseTech } from '@domain/economy/tech';
 import { createRng } from '@domain/rng';
 import { createNewGame, type GameState } from './gameState';
 import { createStore, type ReducerDeps, type Store } from './store';
@@ -63,6 +67,8 @@ const deps: ReducerDeps = {
   items: parseItems(itemData),
   baseConfig: parseBaseConfig(baseData),
   structureDefs: parseStructures(structureData),
+  recipes: parseRecipes(recipeData),
+  tech: parseTech(techData),
 };
 
 function speciesOf(id: string): Species {

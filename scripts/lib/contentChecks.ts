@@ -166,7 +166,7 @@ export const itemsSchema = z.object({
       z.object({
         id: z.string().regex(/^[a-z][a-z0-9_]*$/, 'id in snake_case'),
         nameKey: z.string().min(1),
-        kind: z.enum(['heal', 'cure', 'revive']),
+        kind: z.enum(['heal', 'cure', 'revive', 'gear']),
         amount: z.number().positive().optional(),
         fraction: z.number().min(0).max(1).optional(),
         usableInBattle: z.boolean(),

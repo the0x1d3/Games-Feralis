@@ -1,3 +1,4 @@
+import { hasIngredients, type Recipe } from '../economy/crafting';
 import type { BaseConfig, StructureDef } from './config';
 import { MS_PER_HOUR, PERMILLE, resourceOf, type BaseState, type PlacedStructure } from './state';
 
@@ -31,6 +32,8 @@ export interface ProductionContext {
   readonly config: BaseConfig;
   readonly structures: ReadonlyMap<string, StructureDef>;
   readonly workers: ReadonlyMap<string, Worker>;
+  /** Le ricette del banco (Fase 5). Assente = nessuna coda da far girare. */
+  readonly recipes?: ReadonlyMap<string, Recipe>;
 }
 
 export interface ProductionConditions {
@@ -48,6 +51,8 @@ export interface ProduceResult {
   readonly base: BaseState;
   readonly produced: Readonly<Record<string, number>>;
   readonly consumed: Readonly<Record<string, number>>;
+  /** Oggetti finiti nello zaino: le ricette possono produrre anche quelli. */
+  readonly crafted: Readonly<Record<string, number>>;
 }
 
 export type MoraleBand = 'full' | 'low' | 'exhausted';
@@ -113,8 +118,9 @@ export function produce(
 ): ProduceResult {
   const produced: Record<string, number> = {};
   const consumed: Record<string, number> = {};
+  const crafted: Record<string, number> = {};
 
-  if (dtMs <= 0 || base.totem === undefined) return { base, produced, consumed };
+  if (dtMs <= 0 || base.totem === undefined) return { base, produced, consumed, crafted };
 
   const step = Math.floor(dtMs);
   const resources: Record<string, number> = { ...base.resources };
@@ -162,6 +168,20 @@ export function produce(
     const worker = structure.workerUid === undefined ? undefined : context.workers.get(structure.workerUid);
 
     if (def === undefined || def.kind !== 'producer' || worker === undefined) return structure;
+
+    /*
+     * La coda del banco ha la precedenza sulla produzione fissa: se il
+     * giocatore ha messo in fila una ricetta, è quella che il Ferale sta
+     * facendo. Come tutte le lavorazioni con ingredienti, si ferma offline
+     * (ADR 0006), quindi non tocca l'uguaglianza fra tick e segmenti.
+     */
+    const head = structure.queue?.[0];
+    const recipe = head === undefined ? undefined : context.recipes?.get(head);
+    if (recipe !== undefined) {
+      if (!conditions.allowInputs) return structure;
+      return runQueue(structure, recipe, worker);
+    }
+
     if (def.input !== undefined && !conditions.allowInputs) return structure;
 
     const cost = cycleCost(def);
@@ -202,5 +222,51 @@ export function produce(
     base: { ...base, resources, structures, morale, moraleProgress, foodDebt },
     produced,
     consumed,
+    crafted,
   };
+
+  /**
+   * Un ciclo della coda.
+   *
+   * Sta qui dentro per leggere `resources`, `produced` e `crafted` senza
+   * passarseli in giro: sono gli accumulatori dell'unica chiamata a `produce`,
+   * e farne dei parametri renderebbe la firma peggiore della chiusura.
+   */
+  function runQueue(
+    structure: PlacedStructure,
+    recipe: Recipe,
+    worker: Worker,
+  ): PlacedStructure {
+    const cost = Math.round(recipe.seconds * 1000) * PERMILLE;
+    if (cost <= 0) return structure;
+
+    const speed = speedPermille(worker, base, conditions, context.config);
+    const workUnits = structure.workUnits + step * speed;
+    if (workUnits < cost) return { ...structure, workUnits };
+
+    // Un ciclo per volta anche quando il segmento è lungo: la coda cambia
+    // ricetta a ogni completamento, e saltarne tre insieme darebbe l'output
+    // sbagliato per le due successive.
+    if (!hasIngredients(recipe, resources)) return { ...structure, workUnits: cost };
+
+    for (const [id, amount] of Object.entries(recipe.input)) {
+      resources[id] = (resources[id] ?? 0) - amount;
+      consumed[id] = (consumed[id] ?? 0) + amount;
+    }
+
+    if (recipe.output.kind === 'resource') {
+      resources[recipe.output.id] = (resources[recipe.output.id] ?? 0) + recipe.output.amount;
+      produced[recipe.output.id] = (produced[recipe.output.id] ?? 0) + recipe.output.amount;
+    } else {
+      crafted[recipe.output.id] = (crafted[recipe.output.id] ?? 0) + recipe.output.amount;
+    }
+
+    const rest = (structure.queue ?? []).slice(1);
+    const { queue: _finita, ...senzaCoda } = structure;
+    return {
+      ...senzaCoda,
+      ...(rest.length === 0 ? {} : { queue: rest }),
+      workUnits: workUnits - cost,
+    };
+  }
 }

@@ -11,7 +11,12 @@ import { asArray, asNumber, asRecord, asString } from '../guards';
  * bilanciare, e non è quello che serve all'MVP.
  */
 
-export type ItemKind = 'heal' | 'cure' | 'revive';
+/**
+ * Quattro generi. `gear` è l'equipaggiamento della Fase 5: non si "usa" su un
+ * Ferale, si possiede — e il possesso è quel che apre un ostacolo esposto al
+ * freddo o al calore (PDR §4.6, "temperatura solo come gate").
+ */
+export type ItemKind = 'heal' | 'cure' | 'revive' | 'gear';
 
 export interface ItemDef {
   readonly id: string;
@@ -21,10 +26,12 @@ export interface ItemDef {
   readonly amount?: number;
   /** Frazione degli HP massimi restituita, per `revive`. */
   readonly fraction?: number;
+  /** Ambiente a cui protegge, per `gear`: "cold" o "heat". */
+  readonly gear?: string;
   readonly usableInBattle: boolean;
 }
 
-const KINDS: readonly ItemKind[] = ['heal', 'cure', 'revive'];
+const KINDS: readonly ItemKind[] = ['heal', 'cure', 'revive', 'gear'];
 
 export function parseItems(raw: unknown): Map<string, ItemDef> {
   const root = asRecord(raw, 'items.json');
@@ -47,6 +54,7 @@ export function parseItems(raw: unknown): Map<string, ItemDef> {
       kind: kind as ItemKind,
       ...(amount === undefined ? {} : { amount: asNumber(amount, `${id}.amount`) }),
       ...(fraction === undefined ? {} : { fraction: asNumber(fraction, `${id}.fraction`) }),
+      ...(record['gear'] === undefined ? {} : { gear: asString(record['gear'], `${id}.gear`) }),
       usableInBattle: record['usableInBattle'] === true,
     });
   }
@@ -54,7 +62,7 @@ export function parseItems(raw: unknown): Map<string, ItemDef> {
   return items;
 }
 
-export type ItemRefusal = 'alreadyFull' | 'notFainted' | 'noStatus' | 'fainted';
+export type ItemRefusal = 'alreadyFull' | 'notFainted' | 'noStatus' | 'fainted' | 'notUsable';
 
 /** Il minimo che serve per decidere se un oggetto ha effetto. */
 export interface ItemTarget {
@@ -106,6 +114,11 @@ export function resolveItemEffect(item: ItemDef, target: ItemTarget): ItemEffect
         clearStatus: true,
       };
     }
+
+    // L'equipaggiamento non si usa su un Ferale: basta averlo nello zaino
+    // perché l'ostacolo che lo pretende si lasci avvicinare.
+    case 'gear':
+      return { applied: false, refusal: 'notUsable' };
   }
 }
 

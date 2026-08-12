@@ -24,6 +24,7 @@ import {
   type ParsedMap,
 } from './lib/dataChecks';
 import { baseSchema, checkBase, structuresSchema } from './lib/baseChecks';
+import { checkTech, recipesSchema, techSchema } from './lib/techChecks';
 import {
   battleSchema,
   checkContent,
@@ -280,6 +281,52 @@ if (baseParsed.success && structuresParsed.success) {
   );
 }
 
+/* ----------------------------------------------- 8. tecnologie e ricette */
+
+const techParsed = techSchema.safeParse(readJson(join(ROOT, 'data', 'tech.json'), 'tech.json'));
+collectIssues('tech.json', techParsed);
+
+const recipesParsed = recipesSchema.safeParse(
+  readJson(join(ROOT, 'data', 'recipes.json'), 'recipes.json'),
+);
+collectIssues('recipes.json', recipesParsed);
+
+if (
+  techParsed.success &&
+  recipesParsed.success &&
+  baseParsed.success &&
+  itemsParsed.success &&
+  battleParsed.success
+) {
+  /*
+   * I punti che l'MVP distribuisce davvero: uno per specie incontrata, cinque
+   * per Custode piu' il boss finale, uno per obiettivo. Se l'albero costa piu'
+   * di cosi', una parte non si potra' mai sbloccare.
+   */
+  const guardians = 4;
+  const objectives = 12;
+  const obtainablePoints =
+    speciesById.size * techParsed.data.points.firstEncounter +
+    guardians * techParsed.data.points.guardian +
+    objectives * techParsed.data.points.objective;
+
+  errors.push(
+    ...checkTech({
+      tech: techParsed.data,
+      recipes: recipesParsed.data,
+      resourceIds: new Set(baseParsed.data.resources.map((entry) => entry.id)),
+      // I Nodi sono strumenti di cattura e vivono in battle.json, ma dal punto
+      // di vista di una ricetta sono oggetti dello zaino come gli altri.
+      itemIds: new Set([
+        ...itemsParsed.data.items.map((entry) => entry.id),
+        ...battleParsed.data.tools.map((entry) => entry.id),
+      ]),
+      translationKeys: referenceKeys,
+      obtainablePoints,
+    }),
+  );
+}
+
 /* ----------------------------------------------------------------- rapporto */
 
 // Le chiavi citate dai file di contenuto sono usate anche se nel codice non
@@ -294,6 +341,10 @@ if (itemsParsed.success) for (const entry of itemsParsed.data.items) usedKeys.ad
 if (baseParsed.success) for (const entry of baseParsed.data.resources) usedKeys.add(entry.nameKey);
 if (structuresParsed.success) {
   for (const entry of structuresParsed.data.structures) usedKeys.add(entry.nameKey);
+}
+if (techParsed.success) for (const node of techParsed.data.nodes) usedKeys.add(node.nameKey);
+if (recipesParsed.success) {
+  for (const recipe of recipesParsed.data.recipes) usedKeys.add(recipe.nameKey);
 }
 
 // Le chiavi passate a t() tramite variabile (nomi di zona, testi dei cartelli)

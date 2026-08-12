@@ -109,6 +109,8 @@ export async function startSession(options: SessionOptions): Promise<Session> {
     items: content.items,
     baseConfig: content.base,
     structureDefs: content.structures,
+    recipes: content.recipes,
+    tech: content.tech,
   };
   const store = createStore(initial, deps);
 

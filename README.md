@@ -18,12 +18,18 @@ collezionare doppioni: è cercare lo strumento giusto.
 
 ## Stato
 
-**Fase 4 — La Radura.** Tre zone percorribili (Costa, Bosco, Altopiano), ciclo
+**Fase 5 — Crafting, tecnologie, gate ambientali.** Tre zone percorribili (Costa, Bosco, Altopiano), ciclo
 giorno/notte da 24 minuti reali, incontri nell'erba alta, combattimento a turni con
 barra ATB, sei tipi in due triangoli, undici specie con tre linee evolutive, cattura
 con la percentuale **visibile prima di lanciare il Nodo**, deposito, esperienza,
 livelli e soprannomi — e ora il Totem, nove strutture produttive, i Ferali assegnati
 al lavoro e la produzione che continua **mentre la scheda è chiusa**, fino a otto ore.
+
+Ogni mansione apre anche un passaggio nel mondo: il masso che chiude la strada per
+l'Altopiano si sposta solo con un Ferale che sa fare Estrazione al livello 2, e il
+Ferale che cercavi per la Radura è lo stesso che ti apre il bioma. Trentacinque
+ricette dietro un albero di ventotto nodi, con i Punti Tecnologia che arrivano dal
+primo incontro con ogni specie.
 
 Il recupero offline non è una formula a parte: è lo stesso codice del gioco, chiamato
 a segmenti invece che a tick, e un test verifica che i due percorsi diano risultati
@@ -36,7 +42,7 @@ accanto: orologio, zona e pannelli galleggiano sul mondo. Una schermata di
 ingresso spiega in due righe di cosa si tratta e dà il gesto di avvio.
 
 Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire, **S**
-per la squadra, **B** per la Radura, **Esc** per chiudere. Tutto è raggiungibile da
+per la squadra, **B** per la Radura, **T** per le tecnologie, **Esc** per chiudere. Tutto è raggiungibile da
 tastiera. Per ora è pensato per il desktop; il touch arriva in Fase 7.
 
 ## Sviluppo

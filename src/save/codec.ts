@@ -130,9 +130,11 @@ function readPlaced(raw: unknown): PlacedStructure | undefined {
   if (typeof id !== 'string' || typeof structureId !== 'string') return undefined;
 
   const workerUid = record['workerUid'];
+  const queue = readStrings(record['queue']);
   return {
     id,
     structureId,
+    ...(queue.length === 0 ? {} : { queue }),
     tx: Math.floor(readNumber(record['tx'], 0)),
     ty: Math.floor(readNumber(record['ty'], 0)),
     ...(typeof workerUid === 'string' ? { workerUid } : {}),
@@ -214,6 +216,8 @@ export function readGameState(raw: RawSave): GameState {
     storage: readCreatures(raw['storage']),
     archive: readArchive(raw['archive']),
     inventory: readNumberMap(raw['inventory']),
+    tech: readStrings(raw['tech']),
+    techPoints: Math.max(0, Math.floor(readNumber(raw['techPoints'], 0))),
     base: readBase(raw['base']),
     flags: readFlags(raw['flags']),
     stats: {

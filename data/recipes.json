@@ -1,0 +1,526 @@
+{
+  "//": "Ricette del banco da lavoro (PDR §4.5). `input` è sempre in risorse della Radura; `output` può essere una risorsa o un oggetto dello zaino, e la differenza conta: le risorse restano nella Radura, gli oggetti si portano addosso e si perdono in parte con un KO (E8).",
+  "//seconds": "Tempo base di un ciclo. La velocità reale dipende dal Ferale al banco: mansione Artigianato, stesso moltiplicatore della produzione (PDR §4.4).",
+  "recipes": [
+    {
+      "id": "assi",
+      "nameKey": "recipe.assi",
+      "tech": "carpenteria",
+      "seconds": 40,
+      "input": {
+        "legna": 4
+      },
+      "output": {
+        "id": "assi",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "corda",
+      "nameKey": "recipe.corda",
+      "tech": "intreccio",
+      "seconds": 35,
+      "input": {
+        "fibra": 3
+      },
+      "output": {
+        "id": "corda",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "blocco_pietra",
+      "nameKey": "recipe.blocco_pietra",
+      "tech": "muratura",
+      "seconds": 45,
+      "input": {
+        "pietra": 5
+      },
+      "output": {
+        "id": "blocco",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "attrezzi_semplici",
+      "nameKey": "recipe.attrezzi_semplici",
+      "tech": "utensili",
+      "seconds": 50,
+      "input": {
+        "legna": 3,
+        "pietra": 3
+      },
+      "output": {
+        "id": "attrezzi",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "bacca_verde",
+      "nameKey": "recipe.bacca_verde",
+      "tech": "erboristeria",
+      "seconds": 25,
+      "input": {
+        "cibo": 2
+      },
+      "output": {
+        "id": "bacca_verde",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "pasto_caldo",
+      "nameKey": "recipe.pasto_caldo",
+      "tech": "cucina",
+      "seconds": 30,
+      "input": {
+        "cibo": 2,
+        "acqua": 1
+      },
+      "output": {
+        "id": "cibo",
+        "kind": "resource",
+        "amount": 4
+      }
+    },
+    {
+      "id": "nodo_base",
+      "nameKey": "recipe.nodo_base",
+      "tech": "nodi_saldi",
+      "seconds": 30,
+      "input": {
+        "fibra": 2,
+        "legna": 1
+      },
+      "output": {
+        "id": "nodo_base",
+        "kind": "item",
+        "amount": 2
+      }
+    },
+    {
+      "id": "cesto",
+      "nameKey": "recipe.cesto",
+      "tech": "intreccio",
+      "seconds": 40,
+      "input": {
+        "fibra": 4
+      },
+      "output": {
+        "id": "cesto",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "mattone",
+      "nameKey": "recipe.mattone",
+      "tech": "muratura",
+      "seconds": 55,
+      "input": {
+        "pietra": 3,
+        "acqua": 2
+      },
+      "output": {
+        "id": "mattone",
+        "kind": "resource",
+        "amount": 2
+      }
+    },
+    {
+      "id": "manico",
+      "nameKey": "recipe.manico",
+      "tech": "carpenteria",
+      "seconds": 30,
+      "input": {
+        "legna": 2,
+        "corda": 1
+      },
+      "output": {
+        "id": "manico",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "lingotto_rinforzato",
+      "nameKey": "recipe.lingotto_rinforzato",
+      "tech": "metallurgia",
+      "seconds": 70,
+      "input": {
+        "lingotto": 2,
+        "attrezzi": 1
+      },
+      "output": {
+        "id": "lingotto_duro",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "tessuto",
+      "nameKey": "recipe.tessuto",
+      "tech": "tessitura",
+      "seconds": 50,
+      "input": {
+        "fibra": 5
+      },
+      "output": {
+        "id": "tessuto",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "mantello_lana",
+      "nameKey": "recipe.mantello_lana",
+      "tech": "tessitura",
+      "seconds": 90,
+      "input": {
+        "tessuto": 2,
+        "corda": 1
+      },
+      "output": {
+        "id": "mantello_lana",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "lama",
+      "nameKey": "recipe.lama",
+      "tech": "affilatura",
+      "seconds": 75,
+      "input": {
+        "lingotto": 1,
+        "manico": 1
+      },
+      "output": {
+        "id": "lama",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "fertilizzante",
+      "nameKey": "recipe.fertilizzante",
+      "tech": "agronomia",
+      "seconds": 45,
+      "input": {
+        "semi": 2,
+        "acqua": 2
+      },
+      "output": {
+        "id": "fertilizzante",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "resina_calma",
+      "nameKey": "recipe.resina_calma",
+      "tech": "distillazione",
+      "seconds": 60,
+      "input": {
+        "cibo": 2,
+        "acqua": 3
+      },
+      "output": {
+        "id": "resina_calma",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "bacca_ambra",
+      "nameKey": "recipe.bacca_ambra",
+      "tech": "distillazione",
+      "seconds": 65,
+      "input": {
+        "cibo": 4,
+        "semi": 1
+      },
+      "output": {
+        "id": "bacca_ambra",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "condotto",
+      "nameKey": "recipe.condotto",
+      "tech": "idraulica",
+      "seconds": 60,
+      "input": {
+        "blocco": 1,
+        "lingotto": 1
+      },
+      "output": {
+        "id": "condotto",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "nodo_migliorato",
+      "nameKey": "recipe.nodo_migliorato",
+      "tech": "nodi_tesi",
+      "seconds": 55,
+      "input": {
+        "corda": 1,
+        "lingotto": 1
+      },
+      "output": {
+        "id": "nodo_migliorato",
+        "kind": "item",
+        "amount": 2
+      }
+    },
+    {
+      "id": "secchio",
+      "nameKey": "recipe.secchio",
+      "tech": "idraulica",
+      "seconds": 45,
+      "input": {
+        "assi": 1,
+        "corda": 1
+      },
+      "output": {
+        "id": "secchio",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "lega_scura",
+      "nameKey": "recipe.lega_scura",
+      "tech": "leghe",
+      "seconds": 100,
+      "input": {
+        "lingotto_duro": 2,
+        "attrezzi": 2
+      },
+      "output": {
+        "id": "lega_scura",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "tunica_ignifuga",
+      "nameKey": "recipe.tunica_ignifuga",
+      "tech": "ignifugia",
+      "seconds": 120,
+      "input": {
+        "tessuto": 3,
+        "lingotto": 2
+      },
+      "output": {
+        "id": "tunica_ignifuga",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "ingranaggio",
+      "nameKey": "recipe.ingranaggio",
+      "tech": "meccanica",
+      "seconds": 90,
+      "input": {
+        "lingotto_duro": 1,
+        "lama": 1
+      },
+      "output": {
+        "id": "ingranaggio",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "essenza_viva",
+      "nameKey": "recipe.essenza_viva",
+      "tech": "alchimia",
+      "seconds": 110,
+      "input": {
+        "fertilizzante": 1,
+        "acqua": 4
+      },
+      "output": {
+        "id": "essenza_viva",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "vetro",
+      "nameKey": "recipe.vetro",
+      "tech": "vetreria",
+      "seconds": 80,
+      "input": {
+        "pietra": 4,
+        "condotto": 1
+      },
+      "output": {
+        "id": "vetro",
+        "kind": "resource",
+        "amount": 2
+      }
+    },
+    {
+      "id": "nodo_superiore",
+      "nameKey": "recipe.nodo_superiore",
+      "tech": "nodi_notturni",
+      "seconds": 95,
+      "input": {
+        "lega_scura": 1,
+        "tessuto": 1
+      },
+      "output": {
+        "id": "nodo_superiore",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "nodo_notturno",
+      "nameKey": "recipe.nodo_notturno",
+      "tech": "nodi_notturni",
+      "seconds": 95,
+      "input": {
+        "lega_scura": 1,
+        "vetro": 1
+      },
+      "output": {
+        "id": "nodo_notturno",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "semenza_scelta",
+      "nameKey": "recipe.semenza_scelta",
+      "tech": "semenzaio",
+      "seconds": 70,
+      "input": {
+        "semi": 3,
+        "fertilizzante": 1
+      },
+      "output": {
+        "id": "semi",
+        "kind": "resource",
+        "amount": 6
+      }
+    },
+    {
+      "id": "acciaio_vivo",
+      "nameKey": "recipe.acciaio_vivo",
+      "tech": "acciaio_vivo",
+      "seconds": 140,
+      "input": {
+        "lega_scura": 2,
+        "ingranaggio": 1
+      },
+      "output": {
+        "id": "acciaio_vivo",
+        "kind": "resource",
+        "amount": 1
+      }
+    },
+    {
+      "id": "nodo_del_custode",
+      "nameKey": "recipe.nodo_del_custode",
+      "tech": "nodo_del_custode",
+      "seconds": 180,
+      "input": {
+        "acciaio_vivo": 1,
+        "vetro": 2,
+        "tessuto": 2
+      },
+      "output": {
+        "id": "nodo_superiore",
+        "kind": "item",
+        "amount": 3
+      }
+    },
+    {
+      "id": "colata_grande",
+      "nameKey": "recipe.colata_grande",
+      "tech": "forgia_alta",
+      "seconds": 130,
+      "input": {
+        "minerale": 6,
+        "attrezzi": 1
+      },
+      "output": {
+        "id": "lingotto",
+        "kind": "resource",
+        "amount": 4
+      }
+    },
+    {
+      "id": "telo_pesante",
+      "nameKey": "recipe.telo_pesante",
+      "tech": "telaio_pesante",
+      "seconds": 120,
+      "input": {
+        "tessuto": 3,
+        "corda": 2
+      },
+      "output": {
+        "id": "mantello_lana",
+        "kind": "item",
+        "amount": 1
+      }
+    },
+    {
+      "id": "meccanismo",
+      "nameKey": "recipe.meccanismo",
+      "tech": "ingegneria",
+      "seconds": 150,
+      "input": {
+        "ingranaggio": 2,
+        "lega_scura": 1
+      },
+      "output": {
+        "id": "attrezzi",
+        "kind": "resource",
+        "amount": 5
+      }
+    },
+    {
+      "id": "conserve",
+      "nameKey": "recipe.conserve",
+      "tech": "essiccatoio",
+      "seconds": 100,
+      "input": {
+        "cibo": 6,
+        "fibra": 2
+      },
+      "output": {
+        "id": "cibo",
+        "kind": "resource",
+        "amount": 12
+      }
+    },
+    {
+      "id": "essenza_pura",
+      "nameKey": "recipe.essenza_pura",
+      "tech": "maestria",
+      "seconds": 160,
+      "input": {
+        "vetro": 2,
+        "fertilizzante": 2
+      },
+      "output": {
+        "id": "essenza_viva",
+        "kind": "item",
+        "amount": 2
+      }
+    }
+  ]
+}

@@ -3,20 +3,108 @@
   "tilesetName": "terrain",
   "columns": 8,
   "tiles": [
-    { "id": 0, "key": "water_deep", "solid": true },
-    { "id": 1, "key": "water_shallow", "solid": true, "clearedBy": "water" },
-    { "id": 2, "key": "sand", "solid": false },
-    { "id": 3, "key": "grass", "solid": false },
-    { "id": 4, "key": "grass_dark", "solid": false },
-    { "id": 5, "key": "dirt_path", "solid": false },
-    { "id": 6, "key": "rock", "solid": true, "clearedBy": "mining" },
-    { "id": 7, "key": "cliff", "solid": true },
-    { "id": 8, "key": "tree_trunk", "solid": true },
-    { "id": 9, "key": "tree_canopy", "solid": false },
-    { "id": 10, "key": "bush", "solid": true, "clearedBy": "gathering" },
-    { "id": 11, "key": "wood_floor", "solid": false },
-    { "id": 12, "key": "snow", "solid": false },
-    { "id": 13, "key": "tall_grass", "solid": false, "encounter": true },
-    { "id": 14, "key": "sign", "solid": true }
+    {
+      "id": 0,
+      "key": "water_deep",
+      "solid": true
+    },
+    {
+      "id": 1,
+      "key": "water_shallow",
+      "solid": true,
+      "clearedBy": "water"
+    },
+    {
+      "id": 2,
+      "key": "sand",
+      "solid": false
+    },
+    {
+      "id": 3,
+      "key": "grass",
+      "solid": false
+    },
+    {
+      "id": 4,
+      "key": "grass_dark",
+      "solid": false
+    },
+    {
+      "id": 5,
+      "key": "dirt_path",
+      "solid": false
+    },
+    {
+      "id": 6,
+      "key": "rock",
+      "solid": true,
+      "clearedBy": "mining"
+    },
+    {
+      "id": 7,
+      "key": "cliff",
+      "solid": true
+    },
+    {
+      "id": 8,
+      "key": "tree_trunk",
+      "solid": true
+    },
+    {
+      "id": 9,
+      "key": "tree_canopy",
+      "solid": false
+    },
+    {
+      "id": 10,
+      "key": "bush",
+      "solid": true,
+      "clearedBy": "gathering"
+    },
+    {
+      "id": 11,
+      "key": "wood_floor",
+      "solid": false
+    },
+    {
+      "id": 12,
+      "key": "snow",
+      "solid": false
+    },
+    {
+      "id": 13,
+      "key": "tall_grass",
+      "solid": false,
+      "encounter": true
+    },
+    {
+      "id": 14,
+      "key": "sign",
+      "solid": true
+    },
+    {
+      "id": 15,
+      "key": "ice_wall",
+      "solid": true,
+      "clearedBy": "flame"
+    },
+    {
+      "id": 16,
+      "key": "embers",
+      "solid": true,
+      "clearedBy": "water"
+    },
+    {
+      "id": 17,
+      "key": "broken_bridge",
+      "solid": true,
+      "clearedBy": "crafting"
+    },
+    {
+      "id": 18,
+      "key": "hard_soil",
+      "solid": true,
+      "clearedBy": "farming"
+    }
   ]
 }

@@ -1,0 +1,51 @@
+{
+  "//": "Albero tecnologico, 4 tier (PDR §4.5). I costi sono calibrati sui punti davvero ottenibili nell'MVP: 11 specie + 3 Custodi + boss + obiettivi. `validate:data` verifica che il totale basti, altrimenti l'albero avrebbe rami irraggiungibili.",
+
+  "points": {
+    "firstEncounter": 1,
+    "guardian": 5,
+    "objective": 1
+  },
+
+  "//tiers": "`requiresNodes` è quanti nodi del tier precedente servono. `guardianFlag` resta null fino alla Fase 6: i Custodi non esistono ancora e un gate su una bandiera che nessuno può alzare renderebbe il tier 3 irraggiungibile (errata E22).",
+  "tiers": [
+    { "tier": 1, "requiresNodes": 0, "guardianFlag": null },
+    { "tier": 2, "requiresNodes": 3, "guardianFlag": null },
+    { "tier": 3, "requiresNodes": 3, "guardianFlag": null },
+    { "tier": 4, "requiresNodes": 3, "guardianFlag": null }
+  ],
+
+  "nodes": [
+    { "id": "utensili", "nameKey": "tech.utensili", "tier": 1, "cost": 1, "requires": [] },
+    { "id": "carpenteria", "nameKey": "tech.carpenteria", "tier": 1, "cost": 1, "requires": ["utensili"] },
+    { "id": "muratura", "nameKey": "tech.muratura", "tier": 1, "cost": 1, "requires": ["utensili"] },
+    { "id": "erboristeria", "nameKey": "tech.erboristeria", "tier": 1, "cost": 1, "requires": [] },
+    { "id": "intreccio", "nameKey": "tech.intreccio", "tier": 1, "cost": 1, "requires": ["carpenteria"] },
+    { "id": "cucina", "nameKey": "tech.cucina", "tier": 1, "cost": 1, "requires": ["erboristeria"] },
+    { "id": "nodi_saldi", "nameKey": "tech.nodi_saldi", "tier": 1, "cost": 1, "requires": ["intreccio"] },
+
+    { "id": "metallurgia", "nameKey": "tech.metallurgia", "tier": 2, "cost": 1, "requires": ["muratura"] },
+    { "id": "tessitura", "nameKey": "tech.tessitura", "tier": 2, "cost": 1, "requires": ["intreccio"] },
+    { "id": "affilatura", "nameKey": "tech.affilatura", "tier": 2, "cost": 1, "requires": ["metallurgia"] },
+    { "id": "agronomia", "nameKey": "tech.agronomia", "tier": 2, "cost": 1, "requires": ["cucina"] },
+    { "id": "distillazione", "nameKey": "tech.distillazione", "tier": 2, "cost": 1, "requires": ["erboristeria"] },
+    { "id": "idraulica", "nameKey": "tech.idraulica", "tier": 2, "cost": 1, "requires": ["muratura"] },
+    { "id": "nodi_tesi", "nameKey": "tech.nodi_tesi", "tier": 2, "cost": 1, "requires": ["nodi_saldi"] },
+
+    { "id": "leghe", "nameKey": "tech.leghe", "tier": 3, "cost": 2, "requires": ["metallurgia"] },
+    { "id": "ignifugia", "nameKey": "tech.ignifugia", "tier": 3, "cost": 2, "requires": ["tessitura"] },
+    { "id": "meccanica", "nameKey": "tech.meccanica", "tier": 3, "cost": 2, "requires": ["affilatura"] },
+    { "id": "alchimia", "nameKey": "tech.alchimia", "tier": 3, "cost": 2, "requires": ["distillazione"] },
+    { "id": "vetreria", "nameKey": "tech.vetreria", "tier": 3, "cost": 2, "requires": ["idraulica"] },
+    { "id": "nodi_notturni", "nameKey": "tech.nodi_notturni", "tier": 3, "cost": 2, "requires": ["nodi_tesi"] },
+    { "id": "semenzaio", "nameKey": "tech.semenzaio", "tier": 3, "cost": 2, "requires": ["agronomia"] },
+
+    { "id": "acciaio_vivo", "nameKey": "tech.acciaio_vivo", "tier": 4, "cost": 2, "requires": ["leghe"] },
+    { "id": "forgia_alta", "nameKey": "tech.forgia_alta", "tier": 4, "cost": 2, "requires": ["acciaio_vivo"] },
+    { "id": "telaio_pesante", "nameKey": "tech.telaio_pesante", "tier": 4, "cost": 2, "requires": ["ignifugia"] },
+    { "id": "ingegneria", "nameKey": "tech.ingegneria", "tier": 4, "cost": 2, "requires": ["meccanica"] },
+    { "id": "essiccatoio", "nameKey": "tech.essiccatoio", "tier": 4, "cost": 2, "requires": ["semenzaio"] },
+    { "id": "maestria", "nameKey": "tech.maestria", "tier": 4, "cost": 2, "requires": ["alchimia", "vetreria"] },
+    { "id": "nodo_del_custode", "nameKey": "tech.nodo_del_custode", "tier": 4, "cost": 2, "requires": ["nodi_notturni"] }
+  ]
+}

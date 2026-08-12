@@ -80,6 +80,30 @@ function readObject(raw: unknown, index: number): ZoneObject | undefined {
     return { kind: 'sign', x, y, textKey };
   }
 
+  if (type === 'obstacle') {
+    const work = properties.get('work');
+    const nameKey = properties.get('nameKey');
+    const level = properties.get('level');
+    const clearedTile = properties.get('clearedTile');
+    const requiresItem = properties.get('requiresItem');
+    if (work === undefined || nameKey === undefined) {
+      throw new Error(`objects[${index}]: un ostacolo richiede le proprieta' work e nameKey`);
+    }
+    return {
+      kind: 'obstacle',
+      id: asString(record['name'], `objects[${index}].name`),
+      nameKey,
+      work,
+      level: level === undefined ? 1 : Number.parseInt(level, 10),
+      clearedTile: clearedTile === undefined ? 3 : Number.parseInt(clearedTile, 10),
+      x,
+      y,
+      width: asNumber(record['width'], `objects[${index}].width`),
+      height: asNumber(record['height'], `objects[${index}].height`),
+      ...(requiresItem === undefined ? {} : { requiresItem }),
+    };
+  }
+
   // Un tipo sconosciuto non e' un errore fatale: Tiled permette di annotare la
   // mappa con oggetti che al gioco non servono.
   return undefined;

@@ -1,4 +1,6 @@
 import type { BaseConfig, StructureDef } from '@domain/base/config';
+import type { Recipe } from '@domain/economy/crafting';
+import type { TechConfig } from '@domain/economy/tech';
 import { maxHp, type CreatureInstance } from '@domain/creature/instance';
 import {
   admit,
@@ -19,6 +21,8 @@ import type { WorldConfig } from '@domain/world/config';
 import { type MoveInput, stepActor } from '@domain/world/movement';
 import type { Zone } from '@domain/world/zone';
 import { reduceBase, tickBase, type BaseAction } from './baseActions';
+import { canClear, clearedFlag, isCleared, obstaclesOf } from '@domain/world/obstacles';
+import { collisionFor } from './collisionCache';
 import { archiveWith, rosterOf, type GameState } from './gameState';
 
 /**
@@ -39,6 +43,8 @@ export type GameAction =
       readonly y: number;
     }
   | { readonly type: 'setFlag'; readonly key: string; readonly value: boolean }
+  /** Rimuove un ostacolo dal mondo, se in squadra c'è chi sa farlo. */
+  | { readonly type: 'clearObstacle'; readonly zoneId: string; readonly obstacleId: string }
   | { readonly type: 'markSaved'; readonly at: number }
   /** Un Ferale entra in squadra, o in deposito se la squadra è piena. */
   | {
@@ -74,6 +80,8 @@ export interface ReducerDeps {
   readonly items: ReadonlyMap<string, ItemDef>;
   readonly baseConfig: BaseConfig;
   readonly structureDefs: ReadonlyMap<string, StructureDef>;
+  readonly recipes: ReadonlyMap<string, Recipe>;
+  readonly tech: TechConfig;
 }
 
 function requireZone(deps: ReducerDeps, zoneId: string): Zone {
@@ -91,7 +99,7 @@ export function createReducer(deps: ReducerDeps) {
           { ...state.player, moving: false },
           action.input,
           action.deltaMs / 1000,
-          zone.collision,
+          collisionFor(zone, state.flags),
           {
             speedTilesPerSecond: deps.config.player.speedTilesPerSecond,
             body: deps.config.player.body,
@@ -100,13 +108,23 @@ export function createReducer(deps: ReducerDeps) {
 
         const gameTimeMs = advanceClock(state.world.gameTimeMs, action.deltaMs);
 
+        // La Radura produce anche mentre cammini: è la stessa funzione che
+        // gira offline, chiamata con un tick invece che con un segmento.
+        const worked = tickBase(state, action.deltaMs, gameTimeMs, deps);
+
+        // Quel che esce dal banco va nello zaino, non nel magazzino: è la
+        // differenza fra una risorsa e un oggetto (E8).
+        const inventory = { ...state.inventory };
+        for (const [id, amount] of Object.entries(worked.crafted)) {
+          inventory[id] = (inventory[id] ?? 0) + amount;
+        }
+
         return {
           ...state,
           player: { zoneId: state.player.zoneId, x: moved.x, y: moved.y, facing: moved.facing },
           world: { gameTimeMs },
-          // La Radura produce anche mentre cammini: è la stessa funzione che
-          // gira offline, chiamata con un tick invece che con un segmento.
-          base: tickBase(state, action.deltaMs, gameTimeMs, deps),
+          base: worked.base,
+          inventory,
           stats: { ...state.stats, playtimeMs: state.stats.playtimeMs + action.deltaMs },
         };
       }
@@ -129,6 +147,28 @@ export function createReducer(deps: ReducerDeps) {
         };
       }
 
+      /*
+       * La "regola d'oro" del PDR §4.3: un Ferale con la mansione giusta apre
+       * un passaggio. Chi decide se si può è `domain/world/obstacles.ts`; qui
+       * si alza soltanto la bandiera, e la collisione ne è la conseguenza.
+       */
+      case 'clearObstacle': {
+        const zone = deps.zones.get(action.zoneId);
+        if (zone === undefined) return state;
+
+        const obstacle = obstaclesOf(zone).find((entry) => entry.id === action.obstacleId);
+        if (obstacle === undefined) return state;
+        if (isCleared(state.flags, zone.id, obstacle.id)) return state;
+
+        const check = canClear(obstacle, state.party, deps.species, state.inventory);
+        if (!check.ok) return state;
+
+        return {
+          ...state,
+          flags: { ...state.flags, [clearedFlag(zone.id, obstacle.id)]: true },
+        };
+      }
+
       case 'setFlag':
         return { ...state, flags: { ...state.flags, [action.key]: action.value } };
 
@@ -139,8 +179,10 @@ export function createReducer(deps: ReducerDeps) {
         // In squadra se c'è posto, altrimenti in deposito: catturare non deve
         // mai essere un'azione che non produce nulla.
         const roster = admit(rosterOf(state), action.creature, deps.partySize);
+        const nuova = state.archive[action.creature.speciesId]?.seen !== true;
         return {
           ...state,
+          techPoints: state.techPoints + (nuova ? deps.tech.points.firstEncounter : 0),
           party: roster.party,
           storage: roster.storage,
           archive: archiveWith(state.archive, action.creature.speciesId, {
@@ -208,8 +250,19 @@ export function createReducer(deps: ReducerDeps) {
         };
       }
 
-      case 'seeSpecies':
-        return { ...state, archive: archiveWith(state.archive, action.speciesId, { seen: true }) };
+      /*
+       * Il primo avvistamento di una specie vale un Punto Tecnologia (PDR §4.5).
+       * È il motivo per cui esplorare e collezionare alimentano l'albero: senza,
+       * i punti arriverebbero solo dai Custodi e la Fase 5 non avrebbe economia.
+       */
+      case 'seeSpecies': {
+        if (state.archive[action.speciesId]?.seen === true) return state;
+        return {
+          ...state,
+          archive: archiveWith(state.archive, action.speciesId, { seen: true }),
+          techPoints: state.techPoints + deps.tech.points.firstEncounter,
+        };
+      }
 
       case 'countCapture':
         return {
@@ -225,6 +278,10 @@ export function createReducer(deps: ReducerDeps) {
       case 'unassignWorker':
       case 'applyOffline':
       case 'loseOnDefeat':
+      case 'unlockTech':
+      case 'awardTechPoints':
+      case 'queueCraft':
+      case 'cancelCraft':
         return reduceBase(state, action, deps);
 
       case 'consumeItem': {

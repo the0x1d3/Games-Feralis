@@ -6,6 +6,7 @@ import tilesData from '@data/world/tiles.json';
 import worldData from '@data/world/world.json';
 import { overlapsSolid } from './collision';
 import { parseWorldConfig } from './config';
+import { clearedFlag, collisionWithObstacles, obstaclesOf } from './obstacles';
 import { reachableTiles } from './reachability';
 import { parseTileRules, parseZone } from './tiled';
 import { findSpawn, type Zone } from './zone';
@@ -100,6 +101,20 @@ describe('punti di comparsa', () => {
   });
 });
 
+/**
+ * Il mondo con tutti gli ostacoli gia' rimossi.
+ *
+ * Dalla Fase 5 alcuni passaggi sono chiusi da un masso o da una barriera di
+ * ghiaccio: e' voluto, ed e' la "regola d'oro" del PDR §4.3. La connettivita'
+ * si misura quindi su un mondo "aperto", e il fatto che da chiuso NON sia
+ * connesso e' un test a parte, qui sotto.
+ */
+function openGrid(zone: Zone) {
+  const flags: Record<string, boolean> = {};
+  for (const obstacle of obstaclesOf(zone)) flags[clearedFlag(zone.id, obstacle.id)] = true;
+  return collisionWithObstacles(zone, flags);
+}
+
 describe('uscite', () => {
   it('puntano a zone e comparse che esistono davvero', () => {
     for (const zone of zones.values()) {
@@ -120,7 +135,7 @@ describe('uscite', () => {
       expect(entry, `${zone.id} non ha punti di comparsa`).toBeDefined();
       if (entry === undefined) continue;
 
-      const reachable = reachableTiles(zone.collision, {
+      const reachable = reachableTiles(openGrid(zone), {
         tx: Math.floor(entry.x / zone.tileSize),
         ty: Math.floor(entry.y / zone.tileSize),
       });
@@ -182,7 +197,7 @@ describe('il mondo e connesso', () => {
 
       const zone = zoneOf(current.zoneId);
       const spawn = findSpawn(zone, current.spawn);
-      const reachable = reachableTiles(zone.collision, {
+      const reachable = reachableTiles(openGrid(zone), {
         tx: Math.floor(spawn.x / zone.tileSize),
         ty: Math.floor(spawn.y / zone.tileSize),
       });
@@ -199,5 +214,30 @@ describe('il mondo e connesso', () => {
     }
 
     expect([...visited].sort()).toEqual([...zoneIds].sort());
+  });
+
+  /*
+   * L'altra meta' del criterio della Fase 5: senza rimuovere il masso,
+   * l'Altopiano NON si raggiunge. Un gate che si aggira e' un gate che non
+   * esiste, e questo si aggirerebbe in silenzio se un giorno la mappa cambiasse
+   * di una casella.
+   */
+  it('ma l Altopiano resta chiuso finche il masso e al suo posto', () => {
+    const bosco = zoneOf('bosco');
+    const spawn = findSpawn(bosco, 'from_costa');
+    const reachable = reachableTiles(bosco.collision, {
+      tx: Math.floor(spawn.x / bosco.tileSize),
+      ty: Math.floor(spawn.y / bosco.tileSize),
+    });
+
+    const exit = bosco.objects.find(
+      (object) => object.kind === 'exit' && object.toZone === 'altopiano',
+    );
+    expect(exit).toBeDefined();
+    if (exit === undefined || exit.kind !== 'exit') return;
+
+    const tx = Math.floor(exit.x / bosco.tileSize);
+    const ty = Math.floor(exit.y / bosco.tileSize);
+    expect(reachable.has(ty * bosco.width + tx)).toBe(false);
   });
 });

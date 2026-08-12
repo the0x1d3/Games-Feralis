@@ -24,6 +24,14 @@ export interface PlacedStructure {
   readonly workerUid?: string;
   /** Lavoro accumulato, intero. Vedi il commento in testa al file. */
   readonly workUnits: number;
+  /**
+   * Le ricette in attesa su questo banco, in ordine (Fase 5).
+   *
+   * Vive sulla struttura e non in un elenco globale: due banchi con due
+   * lavoratori diversi devono poter andare a velocità diverse, che è l'unico
+   * motivo per costruirne un secondo.
+   */
+  readonly queue?: readonly string[];
 }
 
 export interface BaseState {

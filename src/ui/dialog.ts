@@ -11,6 +11,15 @@ import { onLocaleChange, t, type TranslationKey } from '@i18n/index';
 
 export interface Dialog {
   toggle(textKey: string): void;
+  /**
+   * Mostra un testo gia' composto.
+   *
+   * Serve ai messaggi con dei valori dentro — "Rugiadello ha spostato il masso"
+   * — che nascono da `t()` con dei parametri e non da una chiave sola. La
+   * regola "nessuna stringa hardcoded" resta: qui arriva sempre il risultato di
+   * una traduzione, mai un letterale.
+   */
+  show(message: string): void;
   hide(): void;
   isOpen(): boolean;
   destroy(): void;
@@ -63,6 +72,14 @@ export function mountDialog(root: HTMLElement): Dialog {
       currentKey = textKey as TranslationKey;
       panel.hidden = false;
       render();
+    },
+    show(message: string): void {
+      // Testo gia' composto: non ha una chiave da ritradurre al cambio lingua,
+      // quindi `currentKey` resta vuota e `render()` non lo tocca.
+      currentKey = undefined;
+      text.textContent = message;
+      panel.hidden = false;
+      close.textContent = t('dialog.close');
     },
     hide,
     isOpen: () => !panel.hidden,

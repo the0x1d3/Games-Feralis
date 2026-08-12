@@ -16,6 +16,14 @@ import { Phaser } from './phaser';
 export interface ZoneView {
   readonly widthPx: number;
   readonly heightPx: number;
+  /**
+   * Sostituisce le caselle di un ostacolo rimosso con il terreno che resta.
+   *
+   * Serve perche' l'aspetto di un ostacolo e' un tile, non uno sprite: tolto il
+   * masso, la mappa deve smettere di disegnarlo. Il tile da mettere al suo
+   * posto arriva dal dato (`clearedTile`), non da un'ipotesi del renderer.
+   */
+  clearTiles(tiles: ReadonlyArray<{ tx: number; ty: number }>, tileIndex: number): void;
   destroy(): void;
 }
 
@@ -50,9 +58,15 @@ export function renderZone(scene: Phaser.Scene, zoneId: string, tiled: unknown):
     return layer;
   });
 
+  const ground = layers[0];
+
   return {
     widthPx: map.widthInPixels,
     heightPx: map.heightInPixels,
+    clearTiles(tiles, tileIndex): void {
+      // I gid di Tiled sono 1-based: l'indice 0-based del dato va spostato di 1.
+      for (const tile of tiles) ground?.putTileAt(tileIndex + 1, tile.tx, tile.ty);
+    },
     destroy(): void {
       for (const layer of layers) layer.destroy();
       map.destroy();

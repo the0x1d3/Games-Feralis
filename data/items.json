@@ -26,6 +26,20 @@
       "kind": "revive",
       "fraction": 0.5,
       "usableInBattle": false
+    },
+    {
+      "id": "mantello_lana",
+      "nameKey": "item.mantello_lana",
+      "kind": "gear",
+      "gear": "cold",
+      "usableInBattle": false
+    },
+    {
+      "id": "tunica_ignifuga",
+      "nameKey": "item.tunica_ignifuga",
+      "kind": "gear",
+      "gear": "heat",
+      "usableInBattle": false
     }
   ]
 }

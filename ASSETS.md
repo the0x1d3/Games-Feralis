@@ -29,6 +29,10 @@ Per ogni asset servono: percorso, origine, autore, licenza, e link alla licenza 
 | `public/assets/sprites/creatures.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 | `public/assets/sprites/structures.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 
+Il tileset è cresciuto in Fase 5 con i quattro ostacoli nuovi (barriera di ghiaccio,
+braci, assito sfondato, terreno duro): sono tile 15–18, aggiunti **in fondo**, perché
+l'indice di un tile finisce dentro i file mappa e riordinarli le romperebbe tutte.
+
 **Il tileset e lo sprite sono placeholder.** Li produce `scripts/gen-assets.ts`,
 che scrive i PNG senza dipendenze esterne. Rigenerarli dà file identici bit per
 bit, quindi non sporcano il diff. Esistono per essere buttati via quando arriverà

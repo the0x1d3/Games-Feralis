@@ -48,7 +48,32 @@ export interface SignObject {
   readonly textKey: string;
 }
 
-export type ZoneObject = SpawnObject | ExitObject | SignObject;
+/**
+ * Un ostacolo del mondo: si rimuove con un Ferale che sa fare la mansione
+ * giusta al livello giusto (PDR §4.3, "regola d'oro" — ogni mansione sblocca
+ * anche un passaggio, così catturare per lavorare e catturare per esplorare
+ * sono la stessa attività).
+ *
+ * Occupa caselle vere sulla griglia di collisione: finché non è rimosso ci si
+ * cammina intorno. `requiresItem` è l'equipaggiamento che serve ad avvicinarsi,
+ * cioè il gate del freddo e del caldo.
+ */
+export interface ObstacleObject {
+  readonly kind: 'obstacle';
+  readonly id: string;
+  readonly nameKey: string;
+  readonly work: string;
+  readonly level: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  /** Il tile che resta sulla mappa quando l'ostacolo viene rimosso. */
+  readonly clearedTile: number;
+  readonly requiresItem?: string;
+}
+
+export type ZoneObject = SpawnObject | ExitObject | SignObject | ObstacleObject;
 
 export interface ZoneLayers {
   /** Indici di tile 0-based; -1 significa casella vuota (i gid di Tiled sono 1-based). */

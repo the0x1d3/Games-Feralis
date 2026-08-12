@@ -1,21 +1,24 @@
 import './ui/styles.css';
 
 import { checkEncounter } from '@domain/world/encounters';
+import { canClear } from '@domain/world/obstacles';
 import { readClock } from '@domain/world/time';
-import { findSpawn, type Zone } from '@domain/world/zone';
+import { findSpawn, type ObstacleObject, type Zone } from '@domain/world/zone';
 import { createGame } from '@engine/index';
-import { detectLocale, setLocale } from '@i18n/index';
+import { detectLocale, setLocale, t, type TranslationKey } from '@i18n/index';
 import { BattleScene } from '@scenes/Battle';
 import { WorldScene } from '@scenes/World';
 import { createBattleController } from '@state/battleController';
 import { startSession, storageKind } from '@state/session';
 import { systemClock } from '@state/systemClock';
 import { mountBase } from '@ui/base';
+import { displayName } from '@ui/baseRows';
 import { mountBattleUi } from '@ui/battleUi';
 import { mountDialog } from '@ui/dialog';
 import { mountHud } from '@ui/hud';
 import { mountLanding } from '@ui/landing';
 import { mountRoster } from '@ui/roster';
+import { mountTech } from '@ui/tech';
 
 /**
  * Punto di ingresso. Qui, e solo qui, il mondo impuro (DOM, orologio, browser)
@@ -137,8 +140,59 @@ async function bootstrap(): Promise<void> {
     },
     onOpen: () => {
       roster.close();
+      tech.close();
     },
   });
+
+  const tech = mountTech(overlay, {
+    getState: () => store.getState(),
+    content,
+    dispatch: (action) => {
+      store.dispatch(action);
+    },
+    onOpen: () => {
+      roster.close();
+      base.close();
+    },
+  });
+
+  /**
+   * Il tasto interagisci davanti a un ostacolo.
+   *
+   * Chi decide se si può rimuovere è `domain/world/obstacles.ts`: qui si
+   * traduce il verdetto in una frase e, se è sì, si alza la bandiera.
+   */
+  const tryClearObstacle = (obstacle: ObstacleObject): void => {
+    const state = store.getState();
+    const workName = t(`work.${obstacle.work}` as TranslationKey);
+    const check = canClear(obstacle, state.party, content.species, state.inventory);
+
+    if (!check.ok) {
+      const item = content.items.get(obstacle.requiresItem ?? '');
+      dialog.show(
+        t(`obstacle.refusal.${check.refusal ?? 'wrongWork'}` as TranslationKey, {
+          work: workName,
+          level: obstacle.level,
+          item: item === undefined ? '' : t(item.nameKey as TranslationKey),
+        }),
+      );
+      return;
+    }
+
+    store.dispatch({
+      type: 'clearObstacle',
+      zoneId: state.player.zoneId,
+      obstacleId: obstacle.id,
+    });
+    worldScene.syncObstacles();
+    dialog.show(
+      t('obstacle.cleared', {
+        who: check.by === undefined ? '' : displayName(check.by, content),
+        name: t(obstacle.nameKey as TranslationKey),
+      }),
+    );
+    void save();
+  };
 
   const initialZone = world.zones.get(store.getState().player.zoneId);
   if (initialZone !== undefined) hud.setZone(initialZone.nameKey);
@@ -149,6 +203,7 @@ async function bootstrap(): Promise<void> {
     hud.setParty(state.party.length);
     roster.refresh();
     base.refresh();
+    tech.refresh();
   });
   hud.setParty(store.getState().party.length);
 
@@ -193,6 +248,7 @@ async function bootstrap(): Promise<void> {
       base.confirmBuild();
       void save();
     },
+    onObstacle: tryClearObstacle,
     canEncounter: () =>
       battle.current() === undefined &&
       store.getState().party.length > 0 &&
@@ -205,6 +261,7 @@ async function bootstrap(): Promise<void> {
       // Cambia, e due pannelli aperti insieme sono solo confusione.
       roster.close();
       base.close();
+      tech.close();
       battle.start(encounter);
       // Dal livello del gioco si usa `run` e non `launch`: quest'ultimo esiste
       // solo sul plugin di scena, cioè dentro una scena.

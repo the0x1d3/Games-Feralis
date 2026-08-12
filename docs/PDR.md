@@ -37,6 +37,9 @@ credendo di correggere un errore.
 | E19 | §4.4 dà a ogni Ferale il suo `morale` e lo usa nella formula di produzione, ma con un morale per lavoratore ogni struttura cambia velocità in un istante diverso: i segmenti omogenei dell'ADR 0002 si moltiplicano e l'uguaglianza fra tick e segmenti non è più dimostrabile. | **Il morale è uno solo, ed è della Radura** (0..100, tre fasce). Il campo `morale` di `CreatureInstance` resta nello schema per la riproduzione di Fase 6, ma non entra nella produzione. Vedi ADR 0006. |
 | E20 | Una catena miniera → fornace dà risultati diversi a seconda di come si spezza il tempo: la fornace trova gli ingredienti tutti alla fine con un segmento lungo, e man mano con i tick. | **Le lavorazioni con `input` si fermano offline.** Chi estrae dal mondo lavora anche a scheda chiusa; chi trasforma no. Vedi ADR 0006. |
 | E21 | §4.4 non fissa i tempi di produzione delle strutture. La prima taratura (20 s per la legna) rendeva 1200 unità in otto ore offline, cioè sessanta strutture: la Radura si costruiva da sola mentre il giocatore non c'era. | Tempi riscalati a 80–240 s per ciclo (`balance:base` pretende 50–400 legna in otto ore). È lo stesso ciclo di E17: la taratura la boccia un simulatore, non un'opinione. |
+| E22 | §4.5: «ogni tier gated da un Custode». I Custodi arrivano in Fase 6, ma il criterio di accettazione della Fase 5 chiede di craftare un oggetto di **tier 3**: con il gate acceso sarebbe irraggiungibile. | Il campo `guardianFlag` esiste nel dato e la regola è implementata, ma resta `null` fino alla Fase 6. Nel frattempo un tier si apre con **tre nodi** di quello precedente. Il test di raggiungibilità gira in entrambe le configurazioni. |
+| E23 | §4.6 vuole la temperatura come «gate per bioma», ma nell'MVP i biomi sono tre e nessuno è propriamente caldo o freddo: un gate per bioma non avrebbe niente da chiudere. | L'equipaggiamento gata gli **ostacoli** esposti all'elemento: la barriera di ghiaccio chiede il mantello di lana, le braci la tunica ignifuga. Stessa meccanica, agganciata a quel che esiste; passerà alle zone in Fase 6, quando i biomi saranno cinque. |
+| E24 | §4.5 non dice dove vivano le code di lavorazione. Un elenco globale sarebbe più semplice, ma renderebbe indistinguibili due banchi. | La coda vive su **ogni banco piazzato** (`PlacedStructure.queue`) e avanza con lo stesso accumulatore intero della produzione. Come tutte le lavorazioni con ingredienti si ferma offline (ADR 0006), quindi non tocca l'uguaglianza fra tick e segmenti. |
 
 ---
 
@@ -669,14 +672,34 @@ lavoro accumulato di ogni struttura (test obbligatorio dell'ADR 0002,
   produzione (1200 legna in otto ore, cioè sessanta strutture costruite in assenza) e li
   ha fatti riscalare — errata E21. Stesso ciclo della Fase 2.
 
-### Fase 5 — Crafting, tecnologie, gate ambientali (2 giorni)
+### Fase 5 — Crafting, tecnologie, gate ambientali ✅ completata
 
-Banchi con coda, 30 ricette, albero a 4 tier, 6 ostacoli ambientali, equipaggiamento per
-bioma freddo e caldo.
+Banchi con coda (max 8), **35 ricette**, albero a **4 tier e 28 nodi**, Punti Tecnologia
+dal primo incontro con ogni specie, **6 ostacoli ambientali** — uno per mansione, come
+chiede la regola d'oro del §4.3 — ed equipaggiamento per il freddo e per il caldo.
+Schema di salvataggio 5.
 
-✅ Percorso verificato: catturi un Ferale con Estrazione 2 → rompi il masso → accedi
-all'Altopiano → crafti l'oggetto tier 3 · nessun deadlock possibile (test di
-raggiungibilità di ogni nodo tech).
+✅ Il percorso completo gira in `src/state/phase5.test.ts`: punti guadagnati incontrando
+le specie → catena di dieci nodi fino al tier 3 → banco costruito, Ferale con Artigianato
+assegnato → tunica ignifuga nello **zaino** (non fra le risorse: E8) · il masso del Bosco
+si rimuove solo con Estrazione 2, e prima di rimuoverlo l'uscita verso l'Altopiano **non
+è raggiungibile a piedi** (`worldData.test.ts`) · nessun deadlock: `unreachableNodes`
+gira in `validate:data` e su ogni test, e il test sa fallire davvero.
+
+**Regole fissate qui, in aggiunta al PDR originale** (errata E22–E24, ADR 0007)
+
+- **Gli ostacoli sono oggetti della mappa, non tile.** Un tile non ha identità e la
+  collisione va costruita una volta sola: lo stato salvato è una bandiera, e la griglia
+  di collisione è una funzione pura di quella bandiera.
+- **Chi può rimuovere un ostacolo si cerca in squadra**, non in deposito: portarsi dietro
+  lo specialista è la decisione.
+- **La coda di un banco butta via il lavoro svolto se si annulla quel che è in corso.**
+  Il contrario significherebbe accumulare progresso su una ricetta e spenderlo su
+  un'altra.
+- **Le ricette non sbloccate non compaiono.** Un elenco di trenta voci spente al minuto
+  dieci direbbe soltanto "non puoi"; l'albero esiste per dire *quando* si potrà.
+- **Ogni nodo deve aprire almeno una ricetta**, verificato in `validate:data`: un nodo
+  che non sblocca nulla è un punto speso per niente.
 
 ### Fase 6 — Progressione e contenuti (4 giorni)
 

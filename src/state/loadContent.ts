@@ -3,6 +3,8 @@ import battleData from '@data/battle.json';
 import creatureData from '@data/creatures.json';
 import itemData from '@data/items.json';
 import moveData from '@data/moves.json';
+import recipeData from '@data/recipes.json';
+import techData from '@data/tech.json';
 import structureData from '@data/structures.json';
 import {
   parseBaseConfig,
@@ -13,7 +15,9 @@ import {
 import { parseBattleConfig, type BattleConfig } from '@domain/battle/config';
 import { parseSpecies, parseMoves, type Move, type Species } from '@domain/creature/species';
 import { parseCreatureConfig, type CreatureConfig } from '@domain/creature/stats';
+import { parseRecipes, type Recipe } from '@domain/economy/crafting';
 import { parseItems, type ItemDef } from '@domain/economy/items';
+import { parseTech, type TechConfig } from '@domain/economy/tech';
 
 /**
  * Contenuto di gioco: mosse, specie, regole di combattimento.
@@ -34,6 +38,8 @@ export interface GameContent {
   readonly items: ReadonlyMap<string, ItemDef>;
   readonly base: BaseConfig;
   readonly structures: ReadonlyMap<string, StructureDef>;
+  readonly recipes: ReadonlyMap<string, Recipe>;
+  readonly tech: TechConfig;
 }
 
 function speciesIdFromPath(path: string): string {
@@ -52,6 +58,8 @@ export async function loadContent(): Promise<GameContent> {
   const items = parseItems(itemData);
   const base = parseBaseConfig(baseData);
   const structureDefs = parseStructures(structureData);
+  const recipes = parseRecipes(recipeData);
+  const tech = parseTech(techData);
 
   const entries = await Promise.all(
     Object.entries(SPECIES_MODULES).map(async ([path, load]) => {
@@ -81,5 +89,13 @@ export async function loadContent(): Promise<GameContent> {
     }
   }
 
-  return { battle, creatures, moves, species, items, base, structures: structureDefs };
+  // Una ricetta che cita un nodo inesistente non si sbloccherebbe mai, e il
+  // giocatore non avrebbe modo di capire perché: meglio non partire affatto.
+  for (const recipe of recipes.values()) {
+    if (!tech.nodes.has(recipe.tech)) {
+      throw new Error(`La ricetta "${recipe.id}" richiede il nodo "${recipe.tech}", che non esiste`);
+    }
+  }
+
+  return { battle, creatures, moves, species, items, base, structures: structureDefs, recipes, tech };
 }

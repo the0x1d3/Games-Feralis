@@ -16,9 +16,11 @@ import type { Facing } from '@domain/world/zone';
  * ai giocatori.
  *
  * Schema 2 (Fase 2): squadra, archivio delle specie e inventario.
+ * Schema 4 (Fase 4): la Radura.
+ * Schema 5 (Fase 5): albero tecnologico e code di lavorazione.
  */
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export interface PlayerState {
   readonly zoneId: string;
@@ -60,6 +62,10 @@ export interface GameState {
   /** La Radura: Totem, strutture, risorse, morale. Vuota finché non pianti il Totem. */
   readonly base: BaseState;
   readonly inventory: Readonly<Record<string, number>>;
+  /** Nodi tecnologici sbloccati. Gli id sono immutabili come quelli di /data. */
+  readonly tech: readonly string[];
+  /** Punti Tecnologia non ancora spesi (PDR §4.5). */
+  readonly techPoints: number;
   readonly flags: Readonly<Record<string, boolean>>;
   readonly stats: StatsState;
 }
@@ -93,6 +99,8 @@ export function createNewGame(options: NewGameOptions): GameState {
     archive: {},
     base: emptyBase(),
     inventory: { ...options.config.startingInventory },
+    tech: [],
+    techPoints: 0,
     flags: {},
     stats: {
       playtimeMs: 0,

@@ -1,12 +1,14 @@
 import { TICK_MS } from '@domain/clock';
 import type { WorldConfig } from '@domain/world/config';
 import { exitUnder, facingSign } from '@domain/world/interaction';
+import { clearedObstacles, facingObstacle, obstacleTiles } from '@domain/world/obstacles';
 import { ambientAt, readClock } from '@domain/world/time';
 import type { Encounter } from '@domain/world/encounters';
 import {
   facingFrame,
   findSpawn,
   triggersEncounter,
+  type ObstacleObject,
   type TileRules,
   type Zone,
 } from '@domain/world/zone';
@@ -55,6 +57,11 @@ export interface WorldSceneContext {
   readonly buildGhost: () => { def: StructureDef; tx: number; ty: number; ok: boolean } | undefined;
   /** Il tasto interagisci mentre si costruisce: conferma invece di leggere un cartello. */
   readonly onBuildConfirm: () => void;
+  /**
+   * Il giocatore ha premuto il tasto interagisci davanti a un ostacolo.
+   * Decidere se si può rimuovere non è compito della scena.
+   */
+  readonly onObstacle: (obstacle: ObstacleObject) => void;
 }
 
 /** Oltre questa soglia si smette di recuperare tempo: una scheda in background
@@ -199,6 +206,7 @@ export class WorldScene extends Phaser.Scene {
     this.view?.destroy();
     this.view = renderZone(this, zoneId, raw);
     this.mountedZoneId = zoneId;
+    this.syncObstacles();
     this.cameras.main.setBounds(0, 0, this.view.widthPx, this.view.heightPx);
     this.snapNextFrame = true;
     this.ctx.onZoneChanged(zone);
@@ -260,8 +268,28 @@ export class WorldScene extends Phaser.Scene {
     const zone = this.ctx.zones.get(state.player.zoneId);
     if (zone === undefined) return;
 
-    const sign = facingSign(zone, { ...state.player, moving: false });
+    const actor = { ...state.player, moving: false };
+
+    // Un ostacolo davanti vince sul cartello: e' il motivo per cui si e' li'.
+    const obstacle = facingObstacle(zone, actor, state.flags);
+    if (obstacle !== undefined) {
+      this.ctx.onObstacle(obstacle);
+      return;
+    }
+
+    const sign = facingSign(zone, actor);
     if (sign !== undefined) this.ctx.onSignRead(sign.textKey);
+  }
+
+  /** Ridisegna il terreno dove gli ostacoli sono stati rimossi. */
+  syncObstacles(): void {
+    const state = this.ctx.store.getState();
+    const zone = this.ctx.zones.get(state.player.zoneId);
+    if (zone === undefined || this.view === undefined) return;
+
+    for (const obstacle of clearedObstacles(zone, state.flags)) {
+      this.view.clearTiles(obstacleTiles(zone, obstacle), obstacle.clearedTile);
+    }
   }
 
   /* --------------------------------------------------------------- disegno */

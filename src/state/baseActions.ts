@@ -1,10 +1,12 @@
 import { totemStructure } from '@domain/base/config';
 import { canPlace, demolish, place } from '@domain/base/layout';
 import { produce, type Worker } from '@domain/base/production';
-import { structureAt, type BaseState } from '@domain/base/state';
+import { replaceStructure, structureAt, type BaseState } from '@domain/base/state';
 import { assign, canAssign, unassign, workLevelOf } from '@domain/base/workers';
 import { findInRoster } from '@domain/creature/roster';
+import { canQueue } from '@domain/economy/crafting';
 import { applyLossFraction } from '@domain/economy/inventory';
+import { canUnlock } from '@domain/economy/tech';
 import { phaseAt, readClock } from '@domain/world/time';
 import { rosterOf, type GameState } from './gameState';
 import type { ReducerDeps } from './store';
@@ -45,7 +47,14 @@ export type BaseAction =
    */
   | { readonly type: 'applyOffline'; readonly base: BaseState; readonly gameTimeMs: number }
   /** Il prezzo di un KO: una frazione dello zaino, mai il deposito (PDR §4.6). */
-  | { readonly type: 'loseOnDefeat' };
+  | { readonly type: 'loseOnDefeat' }
+  /* ------------------------------------------------- Fase 5: tecnologie */
+  | { readonly type: 'unlockTech'; readonly nodeId: string }
+  | { readonly type: 'awardTechPoints'; readonly amount: number }
+  /** Mette una ricetta in coda su un banco. */
+  | { readonly type: 'queueCraft'; readonly structureId: string; readonly recipeId: string }
+  /** Toglie dalla coda la ricetta in posizione `index`. */
+  | { readonly type: 'cancelCraft'; readonly structureId: string; readonly index: number };
 
 /**
  * I lavoratori assegnati, con il livello nella mansione della loro struttura.
@@ -86,16 +95,23 @@ export function tickBase(
   deltaMs: number,
   gameTimeMs: number,
   deps: ReducerDeps,
-): BaseState {
+): { base: BaseState; crafted: Readonly<Record<string, number>> } {
   const isNight =
     phaseAt(readClock(gameTimeMs, deps.config.time).hourFloat, deps.config.time) === 'night';
 
-  return produce(
+  const result = produce(
     state.base,
     deltaMs,
-    { config: deps.baseConfig, structures: deps.structureDefs, workers: workersOf(state, deps) },
+    {
+      config: deps.baseConfig,
+      structures: deps.structureDefs,
+      workers: workersOf(state, deps),
+      recipes: deps.recipes,
+    },
     { isNight, allowInputs: true },
-  ).base;
+  );
+
+  return { base: result.base, crafted: result.crafted };
 }
 
 export function reduceBase(state: GameState, action: BaseAction, deps: ReducerDeps): GameState {
@@ -179,6 +195,74 @@ export function reduceBase(state: GameState, action: BaseAction, deps: ReducerDe
 
     case 'applyOffline':
       return { ...state, base: action.base, world: { gameTimeMs: action.gameTimeMs } };
+
+    case 'unlockTech': {
+      const check = canUnlock(
+        deps.tech,
+        { unlocked: state.tech, points: state.techPoints, flags: state.flags },
+        action.nodeId,
+      );
+      if (!check.ok) return state;
+
+      const node = deps.tech.nodes.get(action.nodeId);
+      if (node === undefined) return state;
+
+      return {
+        ...state,
+        tech: [...state.tech, node.id],
+        techPoints: state.techPoints - node.cost,
+      };
+    }
+
+    case 'awardTechPoints':
+      if (action.amount <= 0) return state;
+      return { ...state, techPoints: state.techPoints + Math.floor(action.amount) };
+
+    case 'queueCraft': {
+      const placed = structureAt(state.base, action.structureId);
+      if (placed === undefined) return state;
+
+      const check = canQueue(
+        deps.recipes,
+        state.tech,
+        {
+          hasStation: deps.structureDefs.get(placed.structureId)?.work === 'crafting',
+          hasWorker: placed.workerUid !== undefined,
+          queueLength: placed.queue?.length ?? 0,
+        },
+        action.recipeId,
+      );
+      if (!check.ok) return state;
+
+      return {
+        ...state,
+        base: replaceStructure(state.base, {
+          ...placed,
+          queue: [...(placed.queue ?? []), action.recipeId],
+        }),
+      };
+    }
+
+    case 'cancelCraft': {
+      const placed = structureAt(state.base, action.structureId);
+      const queue = placed?.queue;
+      if (placed === undefined || queue === undefined) return state;
+      if (action.index < 0 || action.index >= queue.length) return state;
+
+      const next = queue.filter((_, position) => position !== action.index);
+      const { queue: _via, ...senzaCoda } = placed;
+      return {
+        ...state,
+        base: replaceStructure(state.base, {
+          ...senzaCoda,
+          ...(next.length === 0 ? {} : { queue: next }),
+          // Annullare quel che si stava facendo butta via il lavoro svolto: il
+          // contrario significherebbe accumulare progresso su una ricetta e
+          // spenderlo su un'altra.
+          workUnits: action.index === 0 ? 0 : placed.workUnits,
+        }),
+      };
+    }
 
     case 'loseOnDefeat': {
       const loss = applyLossFraction(

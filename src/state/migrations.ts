@@ -63,6 +63,16 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     ...save,
     base: { structures: [], resources: {}, morale: 100, foodDebt: 0, moraleProgress: 0 },
   }),
+
+  /**
+   * 4 → 5 (Fase 5): albero tecnologico.
+   *
+   * Si riparte da zero punti e nessun nodo. I punti gia' "meritati" con le
+   * specie incontrate prima della Fase 5 non si recuperano: inventarli
+   * significherebbe regalare mezzo albero a chi ha una partita vecchia, e
+   * toglierebbe senso al primo incontro con le specie che restano.
+   */
+  4: (save) => ({ ...save, tech: [], techPoints: 0 }),
 };
 
 export interface MigrationResult {

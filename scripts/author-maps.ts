@@ -55,6 +55,16 @@ const LEGEND: Readonly<Record<string, LegendEntry>> = {
   '%': { ground: 13 }, // erba alta — è qui che compaiono i Ferali selvatici
   i: { ground: 3, decor: 14 }, // cartello su erba
   I: { ground: 2, decor: 14 }, // cartello su sabbia
+  /*
+   * Ostacoli della Fase 5. Il tile da' l'aspetto e la solidita' iniziale, ma
+   * chi decide se sono ancora in piedi e' l'oggetto "obstacle" nella lista
+   * della zona: rimosso l'ostacolo, la casella torna quella dichiarata in
+   * `clearedTile`. Vive tutto nel dato, niente coordinate scritte nel codice.
+   */
+  '#': { ground: 15 }, // barriera di ghiaccio — mansione Fiamma
+  F: { ground: 16 }, // braci ardenti — mansione Acqua
+  B: { ground: 17 }, // assito sfondato — mansione Artigianato
+  D: { ground: 18 }, // terreno duro — mansione Coltivazione
 };
 
 /* -------------------------------------------------------------------- mappe */
@@ -79,7 +89,21 @@ type ObjectSource =
       readonly toZone: string;
       readonly toSpawn: string;
     }
-  | { readonly kind: 'sign'; readonly tx: number; readonly ty: number; readonly textKey: string };
+  | { readonly kind: 'sign'; readonly tx: number; readonly ty: number; readonly textKey: string }
+  | {
+      readonly kind: 'obstacle';
+      readonly name: string;
+      readonly nameKey: string;
+      readonly tx: number;
+      readonly ty: number;
+      readonly tw: number;
+      readonly th: number;
+      readonly work: string;
+      readonly level: number;
+      /** Il tile che resta quando l'ostacolo viene rimosso. */
+      readonly clearedTile: number;
+      readonly requiresItem?: string;
+    };
 
 const COSTA: Rows = [
   ['~~~,,,,,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,,,'],
@@ -94,12 +118,12 @@ const COSTA: Rows = [
   ['~~~,,,,,,,', ',,%%%,,,==', '=,,,,,,,,,', ',,,%%,,,,,'],
   ['~~~,,,,,o,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,o,,,,,'],
   ['~~~,,,,,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,,,'],
-  ['~~~.,,,,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,,,'],
+  ['~~~.,,,,,,', ',,,,,,,,==', '=,,,,DD,,,', ',,,,,,,,,,'],
   ['~~~..,,,,,', ',,,,,,,,==', '=,,,,,,,,.', '.,,,,,,,,,'],
   ['~~~...,,,,', ',,,,,,,,==', '=,,,,,,...', '..,,,,,,,,'],
   ['~~~....,,,', ',,,,,,,,==', '=,,,,.....', '...,,,,,,,'],
   ['~~~.....,,', '.,,,,,,,==', '=,,......w', 'ww.,,,,,,,'],
-  ['~~~......,', '..,,,,,,==', '=,,......w', 'ww..,,,,,,'],
+  ['~~~......,', '..,,,,,,==', '=,,......w', 'BB..,,,,,,'],
   ['~~~.......', '...,,,,,==', '=.......Iw', 'ww...,,,,,'],
   ['~~~.......', '.....,,,==', '=.........', '.....,,,,,'],
   ['~~~.......', '.......I..', '..........', '......,,,,'],
@@ -128,8 +152,8 @@ const BOSCO: Rows = [
   ['T:,%%%,,,,', ',,%%,,,,==', '=,,,,%%%,,', ',,,,,,,,:T'],
   ['T:,,,%%,,,', ',,,,,,,,==', '=,,%%,,,,,', ',,%%%,,,:T'],
   ['T:,,,,,,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,:T'],
-  ['T:,,,,,,,,', ',,,,,,,,==', '==========', '=========='],
-  ['T:,,,,,,,,', ',,,,,,,,==', '==========', '=========='],
+  ['T:,,,,,,,,', ',,,,,,,,==', '==========', '========o='],
+  ['T:,,,,,,,,', ',,,,,,,,==', '==========', '========o='],
   ['T:,,,,,,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,:T'],
   ['T:,,,,o,,,', ',,,,,,,,==', '=,,,,,,,,,', ',,,,,,,,:T'],
   ['T:,%%%,,,,', ',,,,%%,,==', '=,,,,,%%,,', ',,,,,,,,:T'],
@@ -151,7 +175,7 @@ const ALTOPIANO: Rows = [
   ['^^^^^^^^^^', '^^^^^^^^^^', '^^^^^^^^^^', '^^^^^^^^^^'],
   ['^ssssssss^', 'ssssssssss', 'ssssssssss', '^ssssssss^'],
   ['^sssossss^', 'ssssssssss', 'sssssossss', '^ssssssss^'],
-  ['^ssssssss^', 'ssssssssss', 'ssssssssss', '^ssssssss^'],
+  ['^#########', '##########', '##########', '#########^'],
   ['^ss::::ss^', 'ss::::::ss', 'ss::::::ss', '^ss::::ss^'],
   ['^:::::::::', '::::::::::', '::::::::::', ':::::::::^'],
   ['^:::,,,,,,', ',,,,,,,,,,', ',,,,,,,,,,', ',,,,,::::^'],
@@ -160,7 +184,7 @@ const ALTOPIANO: Rows = [
   ['^:,,,,,,,,', ',,,,,,,,,,', ',,,,,,,,,,', ',,,,,,,,:^'],
   ['^,,%%,,,,,', ',,%%%,,,,,', ',,,,,,%%,,', ',,,%%,,,,^'],
   ['^,,,,,,,,,', ',,,,,,,,,,', ',,,,,o,,,,', ',,,,,,,,,^'],
-  ['^,,,,,,,,,', ',,,,,,,,,,', ',,,,,,,,,,', ',,,,,,,,,^'],
+  ['^,,,,,,,,,', ',,,,,,,,,,', ',,,,,FF,,,', ',,,,,,,,,^'],
   ['==========', '==========', '=====,,,,,', ',,,,,,,,,^'],
   ['==========', '==========', '=====,,,,,', ',,,,,,,,,^'],
   ['^,,,,,i,,,', ',,,,,,,,,,', ',,,,,,,,,,', ',,,,,,,,,^'],
@@ -191,6 +215,42 @@ const ZONES: readonly ZoneSource[] = [
       { kind: 'exit', tx: 18, ty: 0, tw: 3, th: 1, toZone: 'bosco', toSpawn: 'from_costa' },
       { kind: 'sign', tx: 17, ty: 20, textKey: 'world.sign.beach' },
       { kind: 'sign', tx: 28, ty: 18, textKey: 'world.sign.totem' },
+      {
+        kind: 'obstacle',
+        name: 'arbusto_spiaggia',
+        nameKey: 'obstacle.arbusto',
+        tx: 6,
+        ty: 4,
+        tw: 1,
+        th: 1,
+        work: 'gathering',
+        level: 1,
+        clearedTile: 3,
+      },
+      {
+        kind: 'obstacle',
+        name: 'terreno_duro',
+        nameKey: 'obstacle.terreno_duro',
+        tx: 25,
+        ty: 12,
+        tw: 2,
+        th: 1,
+        work: 'farming',
+        level: 1,
+        clearedTile: 3,
+      },
+      {
+        kind: 'obstacle',
+        name: 'pontile_rotto',
+        nameKey: 'obstacle.pontile',
+        tx: 30,
+        ty: 17,
+        tw: 2,
+        th: 1,
+        work: 'crafting',
+        level: 1,
+        clearedTile: 11,
+      },
     ],
   },
   {
@@ -203,6 +263,23 @@ const ZONES: readonly ZoneSource[] = [
       { kind: 'exit', tx: 18, ty: 29, tw: 3, th: 1, toZone: 'costa', toSpawn: 'from_bosco' },
       { kind: 'exit', tx: 39, ty: 13, tw: 1, th: 2, toZone: 'altopiano', toSpawn: 'from_bosco' },
       { kind: 'sign', tx: 17, ty: 26, textKey: 'world.sign.forest' },
+      /*
+       * IL masso della Fase 5. Chiude l'unico accesso all'uscita verso
+       * l'Altopiano: le caselle sopra e sotto sono alberi, quindi non si aggira.
+       * Serve un Ferale con Estrazione 2.
+       */
+      {
+        kind: 'obstacle',
+        name: 'masso_altopiano',
+        nameKey: 'obstacle.masso',
+        tx: 38,
+        ty: 13,
+        tw: 1,
+        th: 2,
+        work: 'mining',
+        level: 2,
+        clearedTile: 5,
+      },
     ],
   },
   {
@@ -213,6 +290,32 @@ const ZONES: readonly ZoneSource[] = [
       { kind: 'spawn', name: 'from_bosco', tx: 3, ty: 13 },
       { kind: 'exit', tx: 0, ty: 13, tw: 1, th: 2, toZone: 'bosco', toSpawn: 'from_altopiano' },
       { kind: 'sign', tx: 6, ty: 15, textKey: 'world.sign.highland' },
+      {
+        kind: 'obstacle',
+        name: 'barriera_ghiaccio',
+        nameKey: 'obstacle.ghiaccio',
+        tx: 1,
+        ty: 3,
+        tw: 38,
+        th: 1,
+        work: 'flame',
+        level: 2,
+        clearedTile: 12,
+        requiresItem: 'mantello_lana',
+      },
+      {
+        kind: 'obstacle',
+        name: 'braci',
+        nameKey: 'obstacle.braci',
+        tx: 25,
+        ty: 12,
+        tw: 2,
+        th: 1,
+        work: 'water',
+        level: 1,
+        clearedTile: 3,
+        requiresItem: 'tunica_ignifuga',
+      },
     ],
   },
 ];
@@ -303,6 +406,29 @@ function buildObjects(sources: ReadonlyArray<ObjectSource>): object[] {
       };
     }
 
+    if (source.kind === 'obstacle') {
+      return {
+        id,
+        name: source.name,
+        type: 'obstacle',
+        x: source.tx * TILE,
+        y: source.ty * TILE,
+        width: source.tw * TILE,
+        height: source.th * TILE,
+        rotation: 0,
+        visible: true,
+        properties: [
+          { name: 'nameKey', type: 'string', value: source.nameKey },
+          { name: 'work', type: 'string', value: source.work },
+          { name: 'level', type: 'string', value: String(source.level) },
+          { name: 'clearedTile', type: 'string', value: String(source.clearedTile) },
+          ...(source.requiresItem === undefined
+            ? []
+            : [{ name: 'requiresItem', type: 'string', value: source.requiresItem }]),
+        ],
+      };
+    }
+
     const common = {
       id,
       x: source.tx * TILE + TILE / 2,
@@ -351,10 +477,10 @@ function buildZone(zone: ZoneSource): object {
         name: 'terrain',
         image: '../../public/assets/tilesets/terrain.png',
         imagewidth: 256,
-        imageheight: 64,
+        imageheight: 96,
         tilewidth: TILE,
         tileheight: TILE,
-        tilecount: 14,
+        tilecount: 19,
         columns: 8,
         margin: 0,
         spacing: 0,

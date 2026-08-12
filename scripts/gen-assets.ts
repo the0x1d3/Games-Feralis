@@ -33,6 +33,9 @@ const C = {
   bush: [63, 122, 60, 255],
   wood: [154, 114, 71, 255],
   snow: [230, 238, 242, 255],
+  ice: [168, 208, 226, 255],
+  ember: [186, 74, 38, 255],
+  flame: [240, 176, 74, 255],
   none: [0, 0, 0, 0],
 } as const satisfies Record<string, Rgba>;
 
@@ -164,6 +167,8 @@ const TILE_PAINTERS: ReadonlyArray<(r: Raster, ox: number, oy: number) => void> 
       r.fillRect(ox + x, oy + y, 1, h, shade(C.grassDark, i % 2 === 0 ? 0.11 : -0.07));
     }
   },
+  // 15..18 sono i quattro ostacoli aggiunti in Fase 5. Le altre due mansioni
+  // (Raccolta, Estrazione) usano l'arbusto e il masso che esistevano gia'.
   // 14 sign — fondo TRASPARENTE: vive nel layer decor, sopra un terreno qualsiasi
   (r, ox, oy) => {
     r.fillRect(ox, oy, TILE, TILE, C.none);
@@ -173,6 +178,40 @@ const TILE_PAINTERS: ReadonlyArray<(r: Raster, ox: number, oy: number) => void> 
     r.fillRect(ox + 7, oy + 8, 18, 2, shade(C.wood, 0.09));
     for (let i = 0; i < 3; i += 1)
       r.fillRect(ox + 10, oy + 11 + i * 3, 12, 1, shade(C.wood, -0.16));
+  },
+  // 15 ice_wall — barriera di ghiaccio: mansione Fiamma
+  (r, ox, oy) => {
+    speckled(r, ox, oy, C.snow, 151, 0.04);
+    r.fillRect(ox + 2, oy + 4, TILE - 4, TILE - 6, C.ice);
+    r.fillRect(ox + 2, oy + 4, TILE - 4, 3, shade(C.ice, 0.14));
+    for (let i = 0; i < 4; i += 1) {
+      const x = 5 + i * 7;
+      r.fillRect(ox + x, oy + 7, 2, TILE - 13, shade(C.ice, 0.1));
+    }
+  },
+  // 16 embers — braci ardenti: mansione Acqua
+  (r, ox, oy) => {
+    speckled(r, ox, oy, C.rock, 161, 0.05);
+    r.fillEllipse(ox + 16, oy + 22, 12, 6, shade(C.rock, -0.14));
+    r.fillEllipse(ox + 16, oy + 20, 9, 5, C.ember);
+    r.fillEllipse(ox + 16, oy + 15, 5, 7, shade(C.ember, 0.16));
+    r.fillEllipse(ox + 16, oy + 11, 3, 4, C.flame);
+  },
+  // 17 broken_bridge — assito sfondato: mansione Artigianato
+  (r, ox, oy) => {
+    speckled(r, ox, oy, C.wood, 171, 0.04);
+    // Il buco al centro è il punto: si vede che manca una tavola.
+    r.fillRect(ox + 9, oy, 14, TILE, shade(C.waterDeep, -0.1));
+    for (let y = 0; y < TILE; y += 8) r.fillRect(ox, oy + y, 9, 1, shade(C.wood, -0.12));
+    for (let y = 0; y < TILE; y += 8) r.fillRect(ox + 23, oy + y, 9, 1, shade(C.wood, -0.12));
+  },
+  // 18 hard_soil — terreno duro da arare: mansione Coltivazione
+  (r, ox, oy) => {
+    speckled(r, ox, oy, C.dirt, 181, 0.05);
+    for (let i = 0; i < 5; i += 1) {
+      r.fillEllipse(ox + 6 + i * 5, oy + 10 + (i % 2) * 11, 3, 2, shade(C.dirt, -0.16));
+    }
+    r.fillRect(ox, oy, TILE, 2, shade(C.dirt, 0.1));
   },
 ];
 

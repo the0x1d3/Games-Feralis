@@ -6,7 +6,9 @@ import boscoMap from '@data/maps/bosco.json';
 import costaMap from '@data/maps/costa.json';
 import creatureData from '@data/creatures.json';
 import itemData from '@data/items.json';
+import recipeData from '@data/recipes.json';
 import structureData from '@data/structures.json';
+import techData from '@data/tech.json';
 import tilesData from '@data/world/tiles.json';
 import worldData from '@data/world/world.json';
 import dewSprout from '@data/species/dew_sprout.json';
@@ -20,7 +22,9 @@ import { TICK_MS } from '@domain/clock';
 import { createCreature } from '@domain/creature/instance';
 import { parseSpecies, type Species } from '@domain/creature/species';
 import { parseCreatureConfig } from '@domain/creature/stats';
+import { parseRecipes } from '@domain/economy/crafting';
 import { parseItems } from '@domain/economy/items';
+import { parseTech } from '@domain/economy/tech';
 import { createRng } from '@domain/rng';
 import { parseWorldConfig } from '@domain/world/config';
 import { NO_INPUT } from '@domain/world/movement';
@@ -68,6 +72,8 @@ const deps: ReducerDeps = {
   items: parseItems(itemData),
   baseConfig,
   structureDefs,
+  recipes: parseRecipes(recipeData),
+  tech: parseTech(techData),
 };
 
 let uidCounter = 0;

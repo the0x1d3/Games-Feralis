@@ -32,10 +32,19 @@ const SAVE: GameState = {
   ],
   archive: { dew_sprout: { seen: true, caught: 1 }, tide_fin: { seen: true, caught: 0 } },
   inventory: { nodo_base: 8, nodo_migliorato: 2 },
+  tech: ['utensili', 'carpenteria'],
+  techPoints: 3,
   base: {
     totem: { zoneId: 'costa', tx: 12, ty: 9 },
     structures: [
-      { id: 's1', structureId: 'taglialegna', tx: 14, ty: 9, workerUid: 'abc123def456', workUnits: 4200 },
+      {
+        id: 's1',
+        structureId: 'taglialegna',
+        tx: 14,
+        ty: 9,
+        workerUid: 'abc123def456',
+        workUnits: 4200,
+      },
       { id: 's2', structureId: 'cava', tx: 16, ty: 9, workUnits: 0 },
     ],
     resources: { legna: 40, pietra: 12 },
