@@ -226,6 +226,162 @@ body {
   flex: none;
 }
 
+/* ---------- Combattimento ---------- */
+
+.battle {
+  margin-top: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.battle[hidden] {
+  display: none;
+}
+
+.battle__field {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.fighter {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.fighter--enemy {
+  border-color: #8a5a5a;
+}
+
+.fighter__role {
+  margin: 0 0 0.2em;
+  color: var(--fg-muted);
+  font-size: 0.66em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fighter__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  font-size: 1em;
+}
+
+.fighter__alpha {
+  padding: 0.05em 0.5em;
+  border: 1px solid var(--focus);
+  border-radius: 999px;
+  color: var(--focus);
+  font-size: 0.65em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fighter__meta {
+  margin: 0.15em 0 0.5em;
+  color: var(--fg-muted);
+  font-size: 0.78em;
+}
+
+.fighter__hp {
+  margin: 0.25em 0 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.78em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fighter__status {
+  display: inline-block;
+  margin-top: 0.4em;
+  padding: 0.05em 0.6em;
+  border: 1px solid #9fb6ff;
+  border-radius: 999px;
+  color: #9fb6ff;
+  font-size: 0.72em;
+}
+
+.bar {
+  height: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar + .bar {
+  margin-top: 0.35em;
+}
+
+.bar__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+
+/* La barra ATB si distingue dai PV anche senza colore: è più sottile. */
+.bar--atb {
+  height: 4px;
+}
+
+.bar--atb .bar__fill {
+  background: var(--focus);
+}
+
+.battle__log {
+  margin: 0.75rem 0 0;
+  padding: 0 0 0 1.2em;
+  min-height: 5.5em;
+  color: var(--fg-muted);
+  font-size: 0.82em;
+}
+
+.battle__log li + li {
+  margin-top: 0.15em;
+}
+
+.battle__log li:last-child {
+  color: var(--fg);
+}
+
+.battle__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+
+.battle__prompt {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.battle__hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.78em;
+}
+
+.battle__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 540px) {
+  .battle__field {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Controlli ---------- */
 
 .button {

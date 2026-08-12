@@ -1,0 +1,65 @@
+{
+  "maxLevel": 40,
+
+  "stats": {
+    "levelScaleDivisor": 50,
+    "ivMax": 31,
+    "ivScaleDivisor": 200,
+    "hpLevelBonus": 2,
+    "hpFlatBonus": 10
+  },
+
+  "rarity": {
+    "common": { "baseCatchRate": 1.0 },
+    "uncommon": { "baseCatchRate": 0.65 },
+    "rare": { "baseCatchRate": 0.4 },
+    "alpha": { "baseCatchRate": 0.18 }
+  },
+
+  "alpha": { "statMultiplier": 1.35 },
+
+  "traitCount": { "none": 0.4, "one": 0.45, "two": 0.15 },
+
+  "traits": [
+    {
+      "id": "fragile",
+      "nameKey": "trait.fragile",
+      "stats": { "hp": -0.15, "vel": 0.15 }
+    },
+    {
+      "id": "robusto",
+      "nameKey": "trait.robusto",
+      "stats": { "hp": 0.12, "vel": -0.08 }
+    },
+    {
+      "id": "furioso",
+      "nameKey": "trait.furioso",
+      "stats": { "att": 0.12, "dif": -0.08 }
+    },
+    {
+      "id": "placido",
+      "nameKey": "trait.placido",
+      "stats": { "dif": 0.12, "att": -0.08 }
+    },
+    {
+      "id": "focoso",
+      "nameKey": "trait.focoso",
+      "stats": { "ele": 0.12, "res": -0.08 }
+    },
+    {
+      "id": "tenace",
+      "nameKey": "trait.tenace",
+      "stats": { "res": 0.12, "ele": -0.08 }
+    },
+    {
+      "id": "mattiniero",
+      "nameKey": "trait.mattiniero",
+      "stats": {}
+    },
+    {
+      "id": "notturno",
+      "nameKey": "trait.notturno",
+      "stats": {}
+    }
+  ]
+}

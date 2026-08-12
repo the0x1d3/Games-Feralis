@@ -23,14 +23,26 @@ import {
   worldSchema,
   type ParsedMap,
 } from './lib/dataChecks';
+import {
+  battleSchema,
+  checkContent,
+  creaturesSchema,
+  encountersSchema,
+  movesSchema,
+  speciesSchema,
+  type ParsedSpecies,
+} from './lib/contentChecks';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const LOCALES_DIR = join(ROOT, 'data', 'locales');
 const MAPS_DIR = join(ROOT, 'data', 'maps');
+const SPECIES_DIR = join(ROOT, 'data', 'species');
 const SRC_DIR = join(ROOT, 'src');
 
 const REFERENCE_LOCALE = 'it';
-const KEY_PATTERN = /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/;
+// Segmenti separati da punto. L'underscore è ammesso dentro un segmento perché
+// le chiavi di contenuto ricalcano gli id di /data: `species.dew_sprout`.
+const KEY_PATTERN = /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9_]+)+$/;
 
 const localeFileSchema = z.record(
   z.string().regex(KEY_PATTERN, 'chiavi piatte in notazione punto, es. "hud.zone"'),
@@ -120,9 +132,20 @@ for (const file of listFiles(SRC_DIR, '.ts')) {
   // Chiave citata come letterale ma passata a t() tramite una variabile o una
   // tabella di lookup: conta come usata, altrimenti la ricerca delle chiavi
   // morte segnala falsi positivi e si smette di leggerla.
-  for (const match of source.matchAll(/['"]([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+)['"]/g)) {
+  for (const match of source.matchAll(/['"]([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+)+)['"]/g)) {
     const key = match[1];
     if (key !== undefined && referenceKeys.has(key)) usedKeys.add(key);
+  }
+
+  // Chiave composta da un template, per esempio `status.${id}`: si marca come
+  // usata l'intera famiglia. Meno preciso, ma l'alternativa è una lista di
+  // avvisi falsi che si smette di leggere.
+  for (const match of source.matchAll(/`([a-z][a-zA-Z0-9.]*)\.\$\{/g)) {
+    const prefix = match[1];
+    if (prefix === undefined) continue;
+    for (const key of referenceKeys) {
+      if (key.startsWith(`${prefix}.`)) usedKeys.add(key);
+    }
   }
 }
 
@@ -173,7 +196,73 @@ if (tilesParsed.success) {
   }
 }
 
+/* ------------------------------------------------------------- 6. contenuto */
+
+const movesParsed = movesSchema.safeParse(readJson(join(ROOT, 'data', 'moves.json'), 'moves.json'));
+collectIssues('moves.json', movesParsed);
+
+const creaturesParsed = creaturesSchema.safeParse(
+  readJson(join(ROOT, 'data', 'creatures.json'), 'creatures.json'),
+);
+collectIssues('creatures.json', creaturesParsed);
+
+const battleParsed = battleSchema.safeParse(
+  readJson(join(ROOT, 'data', 'battle.json'), 'battle.json'),
+);
+collectIssues('battle.json', battleParsed);
+
+const encountersParsed = encountersSchema.safeParse(
+  readJson(join(ROOT, 'data', 'world', 'encounters.json'), 'encounters.json'),
+);
+collectIssues('encounters.json', encountersParsed);
+
+const speciesById = new Map<string, ParsedSpecies>();
+
+for (const file of listFiles(SPECIES_DIR, '.json')) {
+  const id = relative(SPECIES_DIR, file).replace(/\.json$/, '');
+  const raw = readJson(file, `species/${id}.json`);
+  if (raw === undefined) continue;
+  const parsed = speciesSchema.safeParse(raw);
+  collectIssues(`species/${id}.json`, parsed);
+  if (!parsed.success) continue;
+
+  // Gli id sono immutabili e legano i salvataggi (CLAUDE.md, regola 5): il
+  // nome del file e l'id dentro devono combaciare, sempre.
+  if (parsed.data.id !== id) {
+    errors.push(`species/${id}.json: dichiara id "${parsed.data.id}"`);
+  }
+  speciesById.set(id, parsed.data);
+}
+
+if (
+  movesParsed.success &&
+  creaturesParsed.success &&
+  battleParsed.success &&
+  encountersParsed.success
+) {
+  errors.push(
+    ...checkContent({
+      species: speciesById,
+      moves: movesParsed.data,
+      battle: battleParsed.data,
+      creatures: creaturesParsed.data,
+      encounters: encountersParsed.data,
+      translationKeys: referenceKeys,
+      knownZones: new Set(maps.keys()),
+    }),
+  );
+}
+
 /* ----------------------------------------------------------------- rapporto */
+
+// Le chiavi citate dai file di contenuto sono usate anche se nel codice non
+// compare mai il loro letterale: il gioco le legge da `nameKey`.
+for (const entry of speciesById.values()) usedKeys.add(entry.nameKey);
+if (movesParsed.success) for (const move of movesParsed.data.moves) usedKeys.add(move.nameKey);
+if (creaturesParsed.success) {
+  for (const trait of creaturesParsed.data.traits) usedKeys.add(trait.nameKey);
+}
+if (battleParsed.success) for (const tool of battleParsed.data.tools) usedKeys.add(tool.nameKey);
 
 // Le chiavi passate a t() tramite variabile (nomi di zona, testi dei cartelli)
 // non compaiono nella scansione letterale: qui si contano come usate.
@@ -205,5 +294,7 @@ const translations = [...bundles.values()].reduce(
   0,
 );
 console.log(
-  `validate:data — ok: ${bundles.size} lingue, ${translations} traduzioni, ${maps.size} mappe, ${warnings.length} avviso/i`,
+  `validate:data — ok: ${bundles.size} lingue, ${translations} traduzioni, ${maps.size} mappe, ` +
+    `${speciesById.size} specie, ${movesParsed.success ? movesParsed.data.moves.length : 0} mosse, ` +
+    `${warnings.length} avviso/i`,
 );

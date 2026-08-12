@@ -2,7 +2,14 @@ import { TICK_MS } from '@domain/clock';
 import type { WorldConfig } from '@domain/world/config';
 import { exitUnder, facingSign } from '@domain/world/interaction';
 import { ambientAt, readClock } from '@domain/world/time';
-import { facingFrame, findSpawn, type Zone } from '@domain/world/zone';
+import type { Encounter } from '@domain/world/encounters';
+import {
+  facingFrame,
+  findSpawn,
+  triggersEncounter,
+  type TileRules,
+  type Zone,
+} from '@domain/world/zone';
 import { assetUrl, DEPTH, TEXTURE } from '@engine/assets';
 import { createWorldInput, type WorldInput } from '@engine/input';
 import { Phaser } from '@engine/phaser';
@@ -25,8 +32,17 @@ export interface WorldSceneContext {
   readonly config: WorldConfig;
   readonly zones: ReadonlyMap<string, Zone>;
   readonly rawMaps: ReadonlyMap<string, unknown>;
+  readonly tileRules: TileRules;
   readonly onSignRead: (textKey: string) => void;
   readonly onZoneChanged: (zone: Zone) => void;
+  /**
+   * Chiamata quando il giocatore ha percorso `distancePx` dentro l'erba alta.
+   * Restituisce l'incontro se ne è scattato uno.
+   */
+  readonly rollEncounter: (distancePx: number, biome: string) => Encounter | undefined;
+  readonly onEncounter: (encounter: Encounter) => void;
+  /** Falso mentre un combattimento è già in corso o la squadra è vuota. */
+  readonly canEncounter: () => boolean;
 }
 
 /** Oltre questa soglia si smette di recuperare tempo: una scheda in background
@@ -48,6 +64,7 @@ export class WorldScene extends Phaser.Scene {
   private worldInput?: WorldInput;
 
   private accumulator = 0;
+  private mountedZoneId?: string;
   private previous = { x: 0, y: 0 };
   private snapNextFrame = true;
   private bobPhase = 0;
@@ -106,6 +123,7 @@ export class WorldScene extends Phaser.Scene {
       this.ctx.store.dispatch({ type: 'tick', deltaMs: TICK_MS, input });
       this.accumulator -= TICK_MS;
       this.checkExit();
+      if (this.checkEncounter(before)) return;
     }
 
     if (this.worldInput?.interactPressed() === true) this.tryInteract();
@@ -114,6 +132,20 @@ export class WorldScene extends Phaser.Scene {
   }
 
   /* ------------------------------------------------------------------ zona */
+
+  /**
+   * Riallinea la scena allo stato dopo che qualcun altro ha spostato il
+   * giocatore — oggi solo il risveglio dopo un KO. Senza, si tornerebbe dal
+   * combattimento con la mappa vecchia sotto i piedi.
+   */
+  syncZone(): void {
+    const zoneId = this.ctx.store.getState().player.zoneId;
+    if (zoneId === this.mountedZoneId) {
+      this.snapNextFrame = true;
+      return;
+    }
+    this.mountZone(zoneId);
+  }
 
   private mountZone(zoneId: string): void {
     const zone = this.ctx.zones.get(zoneId);
@@ -124,6 +156,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.view?.destroy();
     this.view = renderZone(this, zoneId, raw);
+    this.mountedZoneId = zoneId;
     this.cameras.main.setBounds(0, 0, this.view.widthPx, this.view.heightPx);
     this.snapNextFrame = true;
     this.ctx.onZoneChanged(zone);
@@ -149,6 +182,35 @@ export class WorldScene extends Phaser.Scene {
     });
     this.previous = { x: spawn.x, y: spawn.y };
     this.mountZone(exit.toZone);
+  }
+
+  /**
+   * Incontro nell'erba alta.
+   *
+   * Si misura la distanza davvero percorsa nel tick, non il tempo: camminare
+   * lentamente non deve essere un modo di evitare gli incontri. Restituisce
+   * vero quando lo scontro parte, così il ciclo si ferma subito invece di
+   * simulare altri tick di un mondo ormai in pausa.
+   */
+  private checkEncounter(before: { x: number; y: number }): boolean {
+    if (!this.ctx.canEncounter()) return false;
+
+    const state = this.ctx.store.getState();
+    const zone = this.ctx.zones.get(state.player.zoneId);
+    if (zone === undefined) return false;
+
+    const distance = Math.hypot(state.player.x - before.x, state.player.y - before.y);
+    if (distance <= 0) return false;
+
+    const tx = Math.floor(state.player.x / zone.tileSize);
+    const ty = Math.floor(state.player.y / zone.tileSize);
+    if (!triggersEncounter(zone, this.ctx.tileRules, tx, ty)) return false;
+
+    const encounter = this.ctx.rollEncounter(distance, zone.id);
+    if (encounter === undefined) return false;
+
+    this.ctx.onEncounter(encounter);
+    return true;
   }
 
   private tryInteract(): void {

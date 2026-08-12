@@ -21,11 +21,12 @@ Per ogni asset servono: percorso, origine, autore, licenza, e link alla licenza 
 
 ## Grafica
 
-| File                                 | Origine                          | Autore           | Licenza   |
-| ------------------------------------ | -------------------------------- | ---------------- | --------- |
-| `public/favicon.svg`                 | Originale, disegnato a mano      | Progetto Feralis | Originale |
-| `public/assets/tilesets/terrain.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
-| `public/assets/sprites/player.png`   | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+| File                                  | Origine                          | Autore           | Licenza   |
+| ------------------------------------- | -------------------------------- | ---------------- | --------- |
+| `public/favicon.svg`                  | Originale, disegnato a mano      | Progetto Feralis | Originale |
+| `public/assets/tilesets/terrain.png`  | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+| `public/assets/sprites/player.png`    | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
+| `public/assets/sprites/creatures.png` | Generato da `npm run assets:gen` | Progetto Feralis | Originale |
 
 **Il tileset e lo sprite sono placeholder.** Li produce `scripts/gen-assets.ts`,
 che scrive i PNG senza dipendenze esterne. Rigenerarli dà file identici bit per

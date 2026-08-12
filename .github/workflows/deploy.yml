@@ -40,6 +40,11 @@ jobs:
       - name: Test
         run: npm run test
 
+      # Criteri di accettazione della Fase 2: 1000 combattimenti senza crash,
+      # durata mediana 20-40 s, cattura di una Comune a HP pieni fra 25 e 35%.
+      - name: Bilanciamento
+        run: npm run balance:sim
+
       - name: Build
         run: npm run build
 

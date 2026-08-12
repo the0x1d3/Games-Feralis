@@ -15,6 +15,8 @@ export interface TileRule {
   readonly solid: boolean;
   /** Mansione che in futuro rimuovera' l'ostacolo (PDR §5.1). Non usata in Fase 1. */
   readonly clearedBy?: string;
+  /** Vero sull'erba alta: camminarci sopra puo' far comparire un Ferale selvatico. */
+  readonly encounter: boolean;
 }
 
 export interface TileRules {
@@ -77,6 +79,17 @@ export interface Zone {
   readonly layers: ZoneLayers;
   readonly objects: readonly ZoneObject[];
   readonly collision: CollisionGrid;
+}
+
+/** Il tile calpestato in una casella: il decor vince sul fondo se c'è. */
+export function groundTileAt(zone: Zone, tx: number, ty: number): number {
+  if (tx < 0 || ty < 0 || tx >= zone.width || ty >= zone.height) return -1;
+  return zone.layers.ground[ty * zone.width + tx] ?? -1;
+}
+
+export function triggersEncounter(zone: Zone, rules: TileRules, tx: number, ty: number): boolean {
+  const tile = groundTileAt(zone, tx, ty);
+  return tile >= 0 && (rules.byId.get(tile)?.encounter ?? false);
 }
 
 export function pixelWidth(zone: Zone): number {

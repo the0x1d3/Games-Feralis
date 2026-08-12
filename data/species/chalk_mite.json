@@ -1,0 +1,22 @@
+{
+  "id": "chalk_mite",
+  "nameKey": "species.chalk_mite",
+  "types": ["neutro"],
+  "baseStats": { "hp": 920, "att": 55, "dif": 55, "vel": 55, "ele": 55, "res": 55 },
+  "growthCurve": "medium",
+  "work": { "crafting": 2, "gathering": 1 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "morso", "level": 6 },
+    { "moveId": "sassata", "level": 10 }
+  ],
+  "baseCatchRate": 1.0,
+  "rarity": "common",
+  "spawn": [
+    { "biome": "costa", "timeOfDay": "any", "weight": 20 },
+    { "biome": "bosco", "timeOfDay": "any", "weight": 20 },
+    { "biome": "altopiano", "timeOfDay": "any", "weight": 20 }
+  ],
+  "size": "S",
+  "sprite": { "atlas": "creatures", "key": "chalk_mite", "frame": 5 }
+}

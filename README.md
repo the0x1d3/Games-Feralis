@@ -18,14 +18,16 @@ collezionare doppioni: è cercare lo strumento giusto.
 
 ## Stato
 
-**Fase 1 — Mondo esplorabile.** Tre zone percorribili (Costa, Bosco, Altopiano),
-movimento a 8 direzioni con collisioni, ciclo giorno/notte da 24 minuti reali,
-cartelli da leggere, salvataggio automatico che sopravvive alla ricarica.
+**Fase 2 — Combattimento e cattura.** Tre zone percorribili (Costa, Bosco, Altopiano),
+ciclo giorno/notte da 24 minuti reali, incontri nell'erba alta, combattimento a turni
+con barra ATB, sei tipi in due triangoli, otto specie di Ferali, e la cattura con la
+percentuale **visibile prima di lanciare il Nodo**.
 
-Combattimento e cattura arrivano nella Fase 2. La roadmap completa è in
+Squadra, archivio ed esperienza si completano nella Fase 3. La roadmap è in
 [`docs/PDR.md`](docs/PDR.md) §7.
 
-Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire.
+Comandi: **frecce o WASD** per muoverti, **E** o **Spazio** per interagire. In
+combattimento si gioca con il mouse o con Tab e Invio.
 
 ## Sviluppo
 

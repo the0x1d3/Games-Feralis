@@ -16,6 +16,7 @@
     { "id": 10, "key": "bush", "solid": true, "clearedBy": "gathering" },
     { "id": 11, "key": "wood_floor", "solid": false },
     { "id": 12, "key": "snow", "solid": false },
-    { "id": 13, "key": "sign", "solid": true }
+    { "id": 13, "key": "tall_grass", "solid": false, "encounter": true },
+    { "id": 14, "key": "sign", "solid": true }
   ]
 }

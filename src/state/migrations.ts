@@ -25,7 +25,26 @@ export type RawSave = Record<string, unknown>;
 export type Migration = (save: RawSave) => RawSave;
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
-  // 1: (save) => ({ ...save, schemaVersion: 2, nuovoCampo: valorePredefinito }),
+  /**
+   * 1 → 2 (Fase 2): arrivano squadra, archivio delle specie e inventario.
+   *
+   * La squadra resta **vuota**: il Ferale iniziale non viene creato qui, perché
+   * una migrazione è una funzione pura che non ha accesso né alle specie né al
+   * RNG. Se ne occupa la sessione, con la stessa regola che vale per una
+   * partita nuova ("se la squadra è vuota, ricevi il Ferale iniziale") — così
+   * esiste un percorso solo, ed è quello già testato.
+   */
+  1: (save) => ({
+    ...save,
+    party: [],
+    archive: {},
+    inventory: { nodo_base: 10, nodo_migliorato: 2 },
+    stats: {
+      ...(typeof save['stats'] === 'object' && save['stats'] !== null ? save['stats'] : {}),
+      battlesWon: 0,
+      creaturesCaught: 0,
+    },
+  }),
 };
 
 export interface MigrationResult {

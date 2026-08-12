@@ -1,0 +1,21 @@
+{
+  "id": "gale_hare",
+  "nameKey": "species.gale_hare",
+  "types": ["vento"],
+  "baseStats": { "hp": 830, "att": 56, "dif": 46, "vel": 80, "ele": 54, "res": 46 },
+  "growthCurve": "fast",
+  "work": { "gathering": 2 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "raffica", "level": 1 },
+    { "moveId": "morso", "level": 8 }
+  ],
+  "baseCatchRate": 1.0,
+  "rarity": "common",
+  "spawn": [
+    { "biome": "costa", "timeOfDay": "any", "weight": 25 },
+    { "biome": "altopiano", "timeOfDay": "any", "weight": 30 }
+  ],
+  "size": "S",
+  "sprite": { "atlas": "creatures", "key": "gale_hare", "frame": 3 }
+}

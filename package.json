@@ -22,7 +22,7 @@
     "maps:build": "tsx scripts/author-maps.ts",
     "balance:sim": "tsx scripts/balance-sim.ts",
     "size-check": "tsx scripts/size-check.ts",
-    "verify": "npm run lint && npm run validate:data && npm run test && npm run build && npm run size-check"
+    "verify": "npm run lint && npm run validate:data && npm run test && npm run balance:sim && npm run build && npm run size-check"
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",

@@ -1,0 +1,18 @@
+{
+  "id": "spark_moth",
+  "nameKey": "species.spark_moth",
+  "types": ["fulmine"],
+  "baseStats": { "hp": 850, "att": 48, "dif": 48, "vel": 74, "ele": 72, "res": 52 },
+  "growthCurve": "medium",
+  "work": { "crafting": 2 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "scossa", "level": 1 },
+    { "moveId": "raffica", "level": 9 }
+  ],
+  "baseCatchRate": 0.65,
+  "rarity": "uncommon",
+  "spawn": [{ "biome": "bosco", "timeOfDay": "night", "weight": 35 }],
+  "size": "S",
+  "sprite": { "atlas": "creatures", "key": "spark_moth", "frame": 6 }
+}

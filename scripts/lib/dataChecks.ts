@@ -21,6 +21,7 @@ export const tilesSchema = z.object({
         key: z.string().min(1),
         solid: z.boolean(),
         clearedBy: z.string().min(1).optional(),
+        encounter: z.boolean().optional(),
       }),
     )
     .min(1),
@@ -35,6 +36,8 @@ const ambientSchema = z.object({
 export const worldSchema = z.object({
   startZoneId: z.string().min(1),
   startSpawn: z.string().min(1),
+  starter: z.object({ speciesId: z.string().min(1), level: z.number().int().positive() }),
+  startingInventory: z.record(z.string(), z.number().int().min(0)),
   time: z.object({
     dayLengthRealMs: z.number().int().positive(),
     startHour: z.number().min(0).max(24),

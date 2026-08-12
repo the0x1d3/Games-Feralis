@@ -98,6 +98,7 @@ export function parseTileRules(raw: unknown): TileRules {
       id,
       key: asString(tile['key'], `tiles.json.tiles[${index}].key`),
       solid: tile['solid'] === true,
+      encounter: tile['encounter'] === true,
       ...(typeof clearedBy === 'string' ? { clearedBy } : {}),
     });
   }

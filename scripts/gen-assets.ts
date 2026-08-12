@@ -154,7 +154,17 @@ const TILE_PAINTERS: ReadonlyArray<(r: Raster, ox: number, oy: number) => void> 
       r.fillEllipse(ox + x, oy + y, 2, 1, shade(C.snow, -0.06));
     }
   },
-  // 13 sign — fondo TRASPARENTE: vive nel layer decor, sopra un terreno qualsiasi
+  // 13 tall_grass — erba alta: è qui che si incontrano i Ferali selvatici
+  (r, ox, oy) => {
+    speckled(r, ox, oy, C.grassDark, 131, 0.05);
+    for (let i = 0; i < 22; i += 1) {
+      const x = Math.floor(noise(i, 1, 132) * (TILE - 2)) + 1;
+      const y = Math.floor(noise(i, 2, 133) * (TILE - 10)) + 6;
+      const h = 5 + Math.floor(noise(i, 3, 134) * 5);
+      r.fillRect(ox + x, oy + y, 1, h, shade(C.grassDark, i % 2 === 0 ? 0.11 : -0.07));
+    }
+  },
+  // 14 sign — fondo TRASPARENTE: vive nel layer decor, sopra un terreno qualsiasi
   (r, ox, oy) => {
     r.fillRect(ox, oy, TILE, TILE, C.none);
     r.fillEllipse(ox + 16, oy + 27, 6, 2, SHADOW);
@@ -209,6 +219,138 @@ function buildPlayer(): Raster {
   return raster;
 }
 
+/* ---------------------------------------------------------------- Ferali */
+
+const CREATURE = 48;
+
+type Feature = 'leaves' | 'fin' | 'ears' | 'longEars' | 'segments' | 'legs' | 'wings' | 'antlers';
+
+interface CreatureLook {
+  /** L'ordine è quello di `sprite.frame` nei file in data/species/. */
+  readonly id: string;
+  readonly body: Rgba;
+  readonly accent: Rgba;
+  readonly feature: Feature;
+  readonly scale: number;
+}
+
+const CREATURES: readonly CreatureLook[] = [
+  {
+    id: 'dew_sprout',
+    body: [104, 168, 92, 255],
+    accent: [62, 122, 58, 255],
+    feature: 'leaves',
+    scale: 0.82,
+  },
+  {
+    id: 'tide_fin',
+    body: [76, 148, 194, 255],
+    accent: [44, 100, 148, 255],
+    feature: 'fin',
+    scale: 0.9,
+  },
+  {
+    id: 'ember_pup',
+    body: [206, 118, 62, 255],
+    accent: [158, 74, 40, 255],
+    feature: 'ears',
+    scale: 0.84,
+  },
+  {
+    id: 'gale_hare',
+    body: [156, 194, 202, 255],
+    accent: [104, 146, 158, 255],
+    feature: 'longEars',
+    scale: 0.8,
+  },
+  {
+    id: 'stone_grub',
+    body: [150, 122, 84, 255],
+    accent: [104, 82, 54, 255],
+    feature: 'segments',
+    scale: 0.94,
+  },
+  {
+    id: 'chalk_mite',
+    body: [178, 178, 172, 255],
+    accent: [124, 124, 120, 255],
+    feature: 'legs',
+    scale: 0.74,
+  },
+  {
+    id: 'spark_moth',
+    body: [214, 196, 94, 255],
+    accent: [136, 96, 176, 255],
+    feature: 'wings',
+    scale: 0.82,
+  },
+  {
+    id: 'pyre_stag',
+    body: [166, 74, 62, 255],
+    accent: [92, 62, 48, 255],
+    feature: 'antlers',
+    scale: 1.0,
+  },
+];
+
+function paintCreature(r: Raster, ox: number, look: CreatureLook): void {
+  const cx = ox + CREATURE / 2;
+  const cy = CREATURE / 2 + 4;
+  const rx = Math.round(13 * look.scale);
+  const ry = Math.round(12 * look.scale);
+
+  r.fillEllipse(cx, CREATURE - 6, rx + 2, 3, SHADOW);
+
+  switch (look.feature) {
+    case 'leaves':
+      r.fillEllipse(cx - 8, cy - ry - 5, 6, 3, look.accent);
+      r.fillEllipse(cx + 8, cy - ry - 5, 6, 3, look.accent);
+      break;
+    case 'fin':
+      r.fillEllipse(cx, cy - ry - 4, 3, 7, look.accent);
+      r.fillEllipse(cx + rx + 3, cy + 2, 5, 8, look.accent);
+      break;
+    case 'ears':
+      r.fillEllipse(cx - 9, cy - ry - 2, 4, 6, look.accent);
+      r.fillEllipse(cx + 9, cy - ry - 2, 4, 6, look.accent);
+      break;
+    case 'longEars':
+      r.fillEllipse(cx - 6, cy - ry - 8, 3, 11, look.accent);
+      r.fillEllipse(cx + 6, cy - ry - 8, 3, 11, look.accent);
+      break;
+    case 'segments':
+      for (let i = -1; i <= 1; i += 1) r.fillEllipse(cx + i * 9, cy + 3, 6, 8, look.accent);
+      break;
+    case 'legs':
+      for (let i = -2; i <= 2; i += 1) r.fillRect(cx + i * 5, cy + ry - 2, 2, 8, look.accent);
+      break;
+    case 'wings':
+      r.fillEllipse(cx - rx - 5, cy - 3, 9, 11, look.accent);
+      r.fillEllipse(cx + rx + 5, cy - 3, 9, 11, look.accent);
+      break;
+    case 'antlers':
+      for (const side of [-1, 1]) {
+        r.fillRect(cx + side * 7, cy - ry - 10, 2, 11, look.accent);
+        r.fillRect(cx + side * 11, cy - ry - 8, 2, 6, look.accent);
+        r.fillRect(cx + side * 7, cy - ry - 10, side * 5, 2, look.accent);
+      }
+      break;
+  }
+
+  r.fillEllipse(cx, cy, rx, ry, look.body);
+  r.fillEllipse(cx, cy - ry / 2, rx - 3, ry / 2, shade(look.body, 0.07));
+  r.fillRect(cx - 6, cy - 2, 3, 3, EYE);
+  r.fillRect(cx + 4, cy - 2, 3, 3, EYE);
+}
+
+function buildCreatures(): Raster {
+  const raster = new Raster(CREATURE * CREATURES.length, CREATURE);
+  CREATURES.forEach((look, index) => {
+    paintCreature(raster, index * CREATURE, look);
+  });
+  return raster;
+}
+
 /* -------------------------------------------------------------------------- */
 
 function write(relativePath: string, raster: Raster): void {
@@ -222,4 +364,5 @@ function write(relativePath: string, raster: Raster): void {
 console.log('gen-assets');
 write('public/assets/tilesets/terrain.png', buildTileset());
 write('public/assets/sprites/player.png', buildPlayer());
+write('public/assets/sprites/creatures.png', buildCreatures());
 console.log('gen-assets — ok (ricorda di aggiornare ASSETS.md se aggiungi un file)');

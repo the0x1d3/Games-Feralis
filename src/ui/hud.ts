@@ -20,6 +20,7 @@ import {
 export interface Hud {
   setZone(nameKey: string): void;
   setClock(clock: WorldClock): void;
+  setParty(size: number): void;
   /** `undefined` mentre il salvataggio e' in corso. */
   setSaved(at: number | undefined): void;
   showStorageWarning(): void;
@@ -67,12 +68,17 @@ export function mountHud(brandRoot: HTMLElement, root: HTMLElement): Hud {
   const timeBlock = element('div', 'hud__block');
   timeBlock.append(timeLabel, timeValue);
 
+  const partyLabel = element('span', 'hud__label');
+  const partyValue = element('strong', 'hud__value');
+  const partyBlock = element('div', 'hud__block');
+  partyBlock.append(partyLabel, partyValue);
+
   const phaseBadge = element('span', 'hud__phase');
 
   const saveState = element('span', 'hud__save');
   saveState.setAttribute('aria-live', 'polite');
 
-  bar.append(zoneBlock, timeBlock, phaseBadge, saveState);
+  bar.append(zoneBlock, timeBlock, partyBlock, phaseBadge, saveState);
 
   const hint = element('p', 'hint');
   const warning = element('p', 'warning');
@@ -103,6 +109,7 @@ export function mountHud(brandRoot: HTMLElement, root: HTMLElement): Hud {
   let savedAt: number | undefined;
   let saving = false;
   let warningVisible = false;
+  let partySize = 0;
 
   function renderSaveState(): void {
     if (saving) {
@@ -119,6 +126,8 @@ export function mountHud(brandRoot: HTMLElement, root: HTMLElement): Hud {
     languageGroup.setAttribute('aria-label', t('ui.language'));
     zoneLabel.textContent = t('hud.zone');
     timeLabel.textContent = t('hud.time');
+    partyLabel.textContent = t('hud.party');
+    partyValue.textContent = String(partySize);
     hint.textContent = t('hud.controls');
     warning.textContent = t('storage.fallback');
     warning.hidden = !warningVisible;
@@ -157,6 +166,11 @@ export function mountHud(brandRoot: HTMLElement, root: HTMLElement): Hud {
       // sessanta volte al secondo per mostrare lo stesso testo.
       if (clock?.minute === next.minute && clock.day === next.day) return;
       clock = next;
+      render();
+    },
+    setParty(size: number): void {
+      if (size === partySize) return;
+      partySize = size;
       render();
     },
     setSaved(at: number | undefined): void {

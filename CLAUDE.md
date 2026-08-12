@@ -41,20 +41,31 @@ Le correzioni già applicate al PDR originale sono elencate nella sua §0 (Errat
 
 ```
 data/maps/     mappe in formato Tiled (generate, vedi ADR 0005)
-data/world/    tiles.json (regole dei tile) e world.json (tempo, giocatore, save)
+data/species/  una specie per file, id immutabile = nome del file
+data/world/    tiles.json, world.json, encounters.json
+data/          battle.json, creatures.json, moves.json
 data/locales/  traduzioni IT/EN
 scripts/       guardie di CI + generatori: validate-data, size-check,
                boundaries.test, gen-assets, author-maps, balance-sim
 src/domain/    ⭐ logica pura, zero dipendenze impure — è dove vive il gioco
-  world/       tempo, collisioni, movimento, interazione, lettura Tiled
+  world/       tempo, collisioni, movimento, interazione, incontri, Tiled
+  battle/      ATB, danno, tipi, stati, cattura, IA, macchina a stati
+  creature/    specie, statistiche, generazione degli esemplari
 src/engine/    l'unica cartella che importa Phaser
 src/scenes/    viste: leggono lo stato e disegnano. Nessuna regola di gioco.
-src/state/     store, riduttori, migrazioni, sessione, caricamento mondo
+src/state/     store, riduttori, migrazioni, sessione, caricamento contenuti
 src/save/      serializzazione, storage, codici di scambio
-src/ui/        pannelli DOM sopra il canvas (HUD, dialoghi)
+src/ui/        pannelli DOM sopra il canvas (HUD, dialoghi, combattimento)
 src/i18n/      traduzioni
 docs/ADR/      una decisione architetturale per file
 ```
+
+## Bilanciamento
+
+I numeri non si scelgono a occhio: si cambia un JSON in `/data` e si esegue
+`npm run balance:sim`, che simula 1000 combattimenti e **fallisce** se la durata
+mediana esce da 20–40 s o se la cattura di una Comune a HP pieni esce da 25–35%.
+Fa parte di `npm run verify` e della CI.
 
 ## Come si verifica il gioco senza browser
 

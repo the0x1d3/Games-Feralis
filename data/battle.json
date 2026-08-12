@@ -1,0 +1,57 @@
+{
+  "party": { "size": 3 },
+
+  "atb": { "threshold": 1000, "tickScale": 1.0 },
+
+  "damage": {
+    "levelScaleDivisor": 40,
+    "baseMultiplier": 2,
+    "critMultiplier": 1.5,
+    "baseCritChance": 0.0625,
+    "initiativeMultiplier": 1.15,
+    "varianceMin": 0.92,
+    "varianceMax": 1.08
+  },
+
+  "types": {
+    "advantage": 1.5,
+    "disadvantage": 0.66,
+    "beats": {
+      "flora": "acqua",
+      "acqua": "fuoco",
+      "fuoco": "flora",
+      "fulmine": "vento",
+      "vento": "terra",
+      "terra": "fulmine"
+    }
+  },
+
+  "statuses": {
+    "burned": { "minTurns": 2, "maxTurns": 4, "damagePerTurn": 0.06, "attMultiplier": 0.75 },
+    "wet": { "minTurns": 2, "maxTurns": 4, "resMultiplierAgainst": { "fulmine": 0.7 } },
+    "paralyzed": { "minTurns": 2, "maxTurns": 4, "velMultiplier": 0.5 },
+    "rooted": { "minTurns": 2, "maxTurns": 4, "preventsSwitch": true },
+    "stunned": { "minTurns": 1, "maxTurns": 2, "skipsTurn": true }
+  },
+
+  "capture": {
+    "hpFactorWeight": 0.7,
+    "statusMultiplier": 1.25,
+    "wetMultiplier": 1.15,
+    "levelDeltaScale": 0.03,
+    "levelDeltaMin": 0.45,
+    "levelDeltaMax": 1.3,
+    "minChance": 0.02,
+    "maxChance": 0.95,
+    "shakes": 3
+  },
+
+  "tools": [
+    { "id": "nodo_base", "nameKey": "item.nodo_base", "multiplier": 1.0 },
+    { "id": "nodo_migliorato", "nameKey": "item.nodo_migliorato", "multiplier": 1.6 },
+    { "id": "nodo_superiore", "nameKey": "item.nodo_superiore", "multiplier": 2.4 },
+    { "id": "nodo_notturno", "nameKey": "item.nodo_notturno", "multiplier": 3.0, "nightOnly": true }
+  ],
+
+  "flee": { "baseChance": 0.45, "speedScale": 0.35, "maxChance": 0.95 }
+}

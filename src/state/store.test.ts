@@ -93,7 +93,7 @@ function holdUntil(
 let store: Store;
 
 beforeEach(() => {
-  store = createStore(newGame(), { config, zones });
+  store = createStore(newGame(), { config, zones, partySize: 3 });
 });
 
 describe('la partita comincia dove deve', () => {
@@ -242,7 +242,7 @@ describe('salvare e ricaricare', () => {
     const saved = store.getState();
 
     // Ricaricare la pagina = ricostruire lo store dallo stato salvato.
-    const reloaded = createStore(saved, { config, zones });
+    const reloaded = createStore(saved, { config, zones, partySize: 3 });
     const state = reloaded.getState();
 
     expect(state.player).toEqual(saved.player);
@@ -256,7 +256,7 @@ describe('salvare e ricaricare', () => {
     hold(store, { ...NO_INPUT, up: true }, 45);
     const saved = store.getState();
 
-    const reloaded = createStore(saved, { config, zones });
+    const reloaded = createStore(saved, { config, zones, partySize: 3 });
     hold(reloaded, { ...NO_INPUT, up: true }, 75);
 
     expect(reloaded.getState().player.zoneId).toBe('bosco');

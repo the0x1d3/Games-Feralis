@@ -81,3 +81,76 @@ describe('la tabella reale', () => {
     }
   });
 });
+
+/**
+ * Un salvataggio vero della Fase 1, come lo scriveva il gioco allora.
+ *
+ * È il test che CLAUDE.md (regola 5) pretende a ogni cambio di schema: carica
+ * un vecchio salvataggio e verifica che arrivi intero. La promessa del PDR
+ * §6.4 — "un salvataggio non deve mai essere invalidato da un update" — vale
+ * solo finché questo test esiste.
+ */
+const SAVE_V1: RawSave = {
+  schemaVersion: 1,
+  gameVersion: '0.2.0',
+  createdAt: 1_700_000_000_000,
+  lastSavedAt: 1_700_000_600_000,
+  rngStreams: { world: 12345, battle: 6789, loot: 111, breeding: 222 },
+  player: { zoneId: 'bosco', x: 624, y: 463.36, facing: 'right' },
+  world: { gameTimeMs: 490_100 },
+  flags: { hoLettoIlCartello: true },
+  stats: { playtimeMs: 610_000, zonesVisited: ['costa', 'bosco'] },
+};
+
+describe('dalla Fase 1 alla Fase 2 (schema 1 → 2)', () => {
+  const migrated = migrate(SAVE_V1);
+
+  it('arriva alla versione corrente', () => {
+    expect(migrated.from).toBe(1);
+    expect(migrated.to).toBe(SCHEMA_VERSION);
+    expect(migrated.applied).toBe(SCHEMA_VERSION - 1);
+  });
+
+  it('non perde nulla di quello che c era', () => {
+    expect(migrated.save['player']).toEqual(SAVE_V1['player']);
+    expect(migrated.save['world']).toEqual(SAVE_V1['world']);
+    expect(migrated.save['rngStreams']).toEqual(SAVE_V1['rngStreams']);
+    expect(migrated.save['flags']).toEqual(SAVE_V1['flags']);
+    expect(migrated.save['createdAt']).toBe(SAVE_V1['createdAt']);
+  });
+
+  it('conserva le statistiche già accumulate e aggiunge le nuove', () => {
+    expect(migrated.save['stats']).toEqual({
+      playtimeMs: 610_000,
+      zonesVisited: ['costa', 'bosco'],
+      battlesWon: 0,
+      creaturesCaught: 0,
+    });
+  });
+
+  it('aggiunge squadra, archivio e inventario', () => {
+    expect(migrated.save['party']).toEqual([]);
+    expect(migrated.save['archive']).toEqual({});
+    expect(migrated.save['inventory']).toEqual({ nodo_base: 10, nodo_migliorato: 2 });
+  });
+
+  /*
+   * La squadra resta vuota di proposito: il Ferale iniziale lo consegna la
+   * sessione, con la stessa regola che vale per una partita nuova. Una
+   * migrazione è pura e non ha accesso né alle specie né al RNG.
+   */
+  it('lascia la squadra vuota, che è il segnale per il regalo iniziale', () => {
+    expect(migrated.save['party']).toEqual([]);
+  });
+
+  it('è idempotente: rimigrare un salvataggio già aggiornato non lo tocca', () => {
+    expect(migrate(migrated.save).applied).toBe(0);
+    expect(migrate(migrated.save).save).toEqual(migrated.save);
+  });
+
+  it('regge un salvataggio v1 monco senza buttarlo', () => {
+    const partial = migrate({ schemaVersion: 1, player: { zoneId: 'costa', x: 1, y: 2 } });
+    expect(partial.save['party']).toEqual([]);
+    expect(partial.save['stats']).toEqual({ battlesWon: 0, creaturesCaught: 0 });
+  });
+});

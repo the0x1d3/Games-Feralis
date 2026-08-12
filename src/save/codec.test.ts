@@ -12,8 +12,32 @@ const SAVE: GameState = {
   rngStreams: { world: 111, battle: 222, loot: 333, breeding: 444 },
   player: { zoneId: 'bosco', x: 624.5, y: 880.25, facing: 'left' },
   world: { gameTimeMs: 1_234_567 },
+  party: [
+    {
+      uid: 'abc123def456',
+      speciesId: 'dew_sprout',
+      nickname: 'Foglia',
+      level: 7,
+      xp: 120,
+      ivs: { hp: 20, att: 3, dif: 31, vel: 12, ele: 8, res: 25 },
+      traits: ['robusto'],
+      hp: 311,
+      status: 'burned',
+      moves: ['colpo', 'rampicante', 'spora'],
+      isAlpha: false,
+      morale: 88,
+      caughtAt: 1_700_000_010_000,
+    },
+  ],
+  archive: { dew_sprout: { seen: true, caught: 1 }, tide_fin: { seen: true, caught: 0 } },
+  inventory: { nodo_base: 8, nodo_migliorato: 2 },
   flags: { hoLettoIlCartello: true },
-  stats: { playtimeMs: 60_000, zonesVisited: ['costa', 'bosco'] },
+  stats: {
+    playtimeMs: 60_000,
+    zonesVisited: ['costa', 'bosco'],
+    battlesWon: 2,
+    creaturesCaught: 1,
+  },
 };
 
 describe('serialize / deserialize', () => {

@@ -1,7 +1,9 @@
 import type { Clock } from '@domain/clock';
+import { createCreature } from '@domain/creature/instance';
 import { findSpawn } from '@domain/world/zone';
 import { loadGame, saveGame, storageKind, type SlotId } from '@save/storage';
 import { createNewGame, type GameState } from './gameState';
+import { loadContent, type GameContent } from './loadContent';
 import { loadWorld, type LoadedWorld } from './loadWorld';
 import { createRngRuntime, type RngRuntime } from './rngRuntime';
 import { createStore, type Store } from './store';
@@ -26,6 +28,7 @@ export interface SessionOptions {
 export interface Session {
   readonly store: Store;
   readonly world: LoadedWorld;
+  readonly content: GameContent;
   readonly rng: RngRuntime;
   /** Vero se lo slot principale era illeggibile e si e' ripescato il backup. */
   readonly recoveredFromBackup: boolean;
@@ -59,12 +62,42 @@ function resolveInitialState(
 }
 
 export async function startSession(options: SessionOptions): Promise<Session> {
-  const world = await loadWorld();
+  const [world, content] = await Promise.all([loadWorld(), loadContent()]);
   const loaded = await loadGame(SLOT);
   const initial = resolveInitialState(world, loaded?.state, options);
 
   const rng = createRngRuntime(initial.rngStreams);
-  const store = createStore(initial, { config: world.config, zones: world.zones });
+  const store = createStore(initial, {
+    config: world.config,
+    zones: world.zones,
+    partySize: content.battle.partySize,
+  });
+
+  /*
+   * Il primo Ferale è un regalo, non una cattura (PDR §3.4, minuto 0-2).
+   *
+   * La stessa regola serve due casi: una partita nuova e un salvataggio dello
+   * schema 1, che la migrazione porta avanti con la squadra vuota. Un percorso
+   * solo significa un comportamento solo da testare.
+   */
+  if (store.getState().party.length === 0) {
+    const starterSpecies = content.species.get(world.config.starter.speciesId);
+    if (starterSpecies === undefined) {
+      throw new Error(`Il Ferale iniziale "${world.config.starter.speciesId}" non esiste`);
+    }
+    const creature = createCreature(
+      {
+        species: starterSpecies,
+        level: world.config.starter.level,
+        isAlpha: false,
+        caughtAt: options.clock.now(),
+      },
+      content.creatures,
+      rng.stream('world'),
+    );
+    store.dispatch({ type: 'grantCreature', creature, caught: false });
+    store.dispatch({ type: 'syncRng', streams: rng.snapshot() });
+  }
 
   let saving = false;
 
@@ -101,6 +134,7 @@ export async function startSession(options: SessionOptions): Promise<Session> {
   return {
     store,
     world,
+    content,
     rng,
     recoveredFromBackup: loaded?.fromBackup === true,
     save,

@@ -2,6 +2,10 @@
   "startZoneId": "costa",
   "startSpawn": "start",
 
+  "//starter": "Il primo Ferale non si cattura: è un regalo (PDR §3.4, minuto 0-2).",
+  "starter": { "speciesId": "dew_sprout", "level": 5 },
+  "startingInventory": { "nodo_base": 10, "nodo_migliorato": 2 },
+
   "time": {
     "dayLengthRealMs": 1440000,
     "startHour": 8,

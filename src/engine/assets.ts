@@ -9,7 +9,10 @@
 export const TEXTURE = {
   terrain: 'terrain',
   player: 'player',
+  creatures: 'creatures',
 } as const;
+
+export const CREATURE_FRAME_SIZE = 48;
 
 /** Deve combaciare con `tilesetName` in data/world/tiles.json. */
 export const TILESET_NAME = 'terrain';

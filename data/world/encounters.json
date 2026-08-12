@@ -1,0 +1,10 @@
+{
+  "chancePerStep": 0.045,
+  "stepDistancePx": 32,
+  "alphaChance": 0.02,
+  "levelByBiome": {
+    "costa": { "min": 3, "max": 5 },
+    "bosco": { "min": 5, "max": 8 },
+    "altopiano": { "min": 8, "max": 12 }
+  }
+}

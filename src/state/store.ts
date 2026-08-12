@@ -1,8 +1,10 @@
+import type { CreatureInstance } from '@domain/creature/instance';
+import type { RngStreamStates } from '@domain/rng';
 import { advanceClock } from '@domain/world/time';
 import type { WorldConfig } from '@domain/world/config';
 import { type MoveInput, stepActor } from '@domain/world/movement';
 import type { Zone } from '@domain/world/zone';
-import type { GameState } from './gameState';
+import { archiveWith, type GameState } from './gameState';
 
 /**
  * Store minimo: azioni in ingresso, stato nuovo in uscita, ascoltatori
@@ -22,11 +24,26 @@ export type GameAction =
       readonly y: number;
     }
   | { readonly type: 'setFlag'; readonly key: string; readonly value: boolean }
-  | { readonly type: 'markSaved'; readonly at: number };
+  | { readonly type: 'markSaved'; readonly at: number }
+  /** Un Ferale entra in squadra: il regalo iniziale o una cattura. */
+  | {
+      readonly type: 'grantCreature';
+      readonly creature: CreatureInstance;
+      readonly caught: boolean;
+    }
+  /** La squadra torna dal combattimento con HP e stati aggiornati. */
+  | { readonly type: 'updateParty'; readonly party: readonly CreatureInstance[] }
+  | { readonly type: 'seeSpecies'; readonly speciesId: string }
+  | { readonly type: 'consumeItem'; readonly itemId: string; readonly amount: number }
+  | { readonly type: 'battleWon' }
+  /** Rimette nello stato la posizione degli stream dopo che il gioco li ha usati. */
+  | { readonly type: 'syncRng'; readonly streams: RngStreamStates };
 
 export interface ReducerDeps {
   readonly config: WorldConfig;
   readonly zones: ReadonlyMap<string, Zone>;
+  /** Da `battle.json`: quanti Ferali stanno in squadra. */
+  readonly partySize: number;
 }
 
 function requireZone(deps: ReducerDeps, zoneId: string): Zone {
@@ -82,6 +99,41 @@ export function createReducer(deps: ReducerDeps) {
 
       case 'markSaved':
         return { ...state, lastSavedAt: action.at };
+
+      case 'grantCreature': {
+        // Oltre la dimensione della squadra il Ferale andrebbe nel deposito,
+        // che arriva in Fase 3: fino ad allora la squadra è il limite.
+        if (state.party.length >= deps.partySize) return state;
+        return {
+          ...state,
+          party: [...state.party, action.creature],
+          archive: archiveWith(state.archive, action.creature.speciesId, {
+            seen: true,
+            caught: action.caught ? 1 : 0,
+          }),
+          stats: {
+            ...state.stats,
+            creaturesCaught: state.stats.creaturesCaught + (action.caught ? 1 : 0),
+          },
+        };
+      }
+
+      case 'updateParty':
+        return { ...state, party: action.party };
+
+      case 'seeSpecies':
+        return { ...state, archive: archiveWith(state.archive, action.speciesId, { seen: true }) };
+
+      case 'consumeItem': {
+        const left = Math.max(0, (state.inventory[action.itemId] ?? 0) - action.amount);
+        return { ...state, inventory: { ...state.inventory, [action.itemId]: left } };
+      }
+
+      case 'battleWon':
+        return { ...state, stats: { ...state.stats, battlesWon: state.stats.battlesWon + 1 } };
+
+      case 'syncRng':
+        return { ...state, rngStreams: action.streams };
     }
   };
 }

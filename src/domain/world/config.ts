@@ -16,9 +16,16 @@ export interface SaveConfig {
   readonly offlineCapMs: number;
 }
 
+export interface StarterConfig {
+  readonly speciesId: string;
+  readonly level: number;
+}
+
 export interface WorldConfig {
   readonly startZoneId: string;
   readonly startSpawn: string;
+  readonly starter: StarterConfig;
+  readonly startingInventory: Readonly<Record<string, number>>;
   readonly time: TimeConfig;
   readonly player: PlayerConfig;
   readonly cameraLerp: number;
@@ -55,9 +62,22 @@ export function parseWorldConfig(raw: unknown): WorldConfig {
   const camera = asRecord(root['camera'], 'world.json.camera');
   const save = asRecord(root['save'], 'world.json.save');
 
+  const starter = asRecord(root['starter'], 'world.json.starter');
+  const startingInventory: Record<string, number> = {};
+  for (const [item, amount] of Object.entries(
+    asRecord(root['startingInventory'], 'world.json.startingInventory'),
+  )) {
+    startingInventory[item] = asNumber(amount, `world.json.startingInventory.${item}`);
+  }
+
   return {
     startZoneId: asString(root['startZoneId'], 'world.json.startZoneId'),
     startSpawn: asString(root['startSpawn'], 'world.json.startSpawn'),
+    starter: {
+      speciesId: asString(starter['speciesId'], 'world.json.starter.speciesId'),
+      level: asNumber(starter['level'], 'world.json.starter.level'),
+    },
+    startingInventory,
     time: {
       dayLengthRealMs: asNumber(time['dayLengthRealMs'], 'world.json.time.dayLengthRealMs'),
       startHour: asNumber(time['startHour'], 'world.json.time.startHour'),

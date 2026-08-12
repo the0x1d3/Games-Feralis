@@ -1,0 +1,22 @@
+{
+  "id": "stone_grub",
+  "nameKey": "species.stone_grub",
+  "types": ["terra"],
+  "baseStats": { "hp": 1080, "att": 62, "dif": 74, "vel": 34, "ele": 44, "res": 62 },
+  "growthCurve": "slow",
+  "work": { "mining": 2, "crafting": 1 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "sassata", "level": 1 },
+    { "moveId": "morso", "level": 9 },
+    { "moveId": "scossone", "level": 14 }
+  ],
+  "baseCatchRate": 1.0,
+  "rarity": "common",
+  "spawn": [
+    { "biome": "bosco", "timeOfDay": "any", "weight": 25 },
+    { "biome": "altopiano", "timeOfDay": "any", "weight": 35 }
+  ],
+  "size": "M",
+  "sprite": { "atlas": "creatures", "key": "stone_grub", "frame": 4 }
+}

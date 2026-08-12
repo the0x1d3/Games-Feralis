@@ -1,7 +1,9 @@
+import type { CreatureInstance } from '@domain/creature/instance';
+import { STAT_KEYS, type StatBlock, type StatKey, type StatusId } from '@domain/creature/species';
 import { asNumber, asRecord, asString } from '@domain/guards';
 import { RNG_STREAM_NAMES, type RngStreamStates } from '@domain/rng';
 import { FACINGS, type Facing } from '@domain/world/zone';
-import { SCHEMA_VERSION, type GameState } from '@state/gameState';
+import { SCHEMA_VERSION, type ArchiveEntry, type GameState } from '@state/gameState';
 import { migrate, type Migration, type RawSave } from '@state/migrations';
 import { crc32Hex } from './checksum';
 
@@ -55,6 +57,68 @@ function readNumber(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+function readNumberMap(value: unknown): Record<string, number> {
+  const result: Record<string, number> = {};
+  if (typeof value !== 'object' || value === null) return result;
+  for (const [key, raw] of Object.entries(value as RawSave)) {
+    if (typeof raw === 'number' && Number.isFinite(raw)) result[key] = raw;
+  }
+  return result;
+}
+
+function readStatBlock(value: unknown): StatBlock {
+  const record = typeof value === 'object' && value !== null ? (value as RawSave) : {};
+  const stats = {} as Record<StatKey, number>;
+  for (const key of STAT_KEYS) stats[key] = readNumber(record[key], 0);
+  return stats;
+}
+
+/**
+ * Un esemplare dal salvataggio.
+ *
+ * Le statistiche derivate non si leggono e non si scrivono: si ricalcolano
+ * ogni volta da specie, livello, IV, tratti e stato Alfa (errata E7). Qui si
+ * legge solo ciò che è davvero accaduto: livello, HP correnti, stato alterato,
+ * mosse imparate.
+ */
+function readCreature(raw: unknown): CreatureInstance | undefined {
+  if (typeof raw !== 'object' || raw === null) return undefined;
+  const record = raw as RawSave;
+  const speciesId = record['speciesId'];
+  const uid = record['uid'];
+  if (typeof speciesId !== 'string' || typeof uid !== 'string') return undefined;
+
+  const nickname = record['nickname'];
+  const status = record['status'];
+
+  return {
+    uid,
+    speciesId,
+    ...(typeof nickname === 'string' ? { nickname } : {}),
+    level: Math.max(1, Math.floor(readNumber(record['level'], 1))),
+    xp: Math.max(0, readNumber(record['xp'], 0)),
+    ivs: readStatBlock(record['ivs']),
+    traits: readStrings(record['traits']),
+    hp: Math.max(0, readNumber(record['hp'], 1)),
+    ...(typeof status === 'string' ? { status: status as StatusId } : {}),
+    moves: readStrings(record['moves']),
+    isAlpha: record['isAlpha'] === true,
+    morale: readNumber(record['morale'], 100),
+    caughtAt: readNumber(record['caughtAt'], 0),
+  };
+}
+
+function readArchive(value: unknown): Record<string, ArchiveEntry> {
+  const result: Record<string, ArchiveEntry> = {};
+  if (typeof value !== 'object' || value === null) return result;
+  for (const [key, raw] of Object.entries(value as RawSave)) {
+    if (typeof raw !== 'object' || raw === null) continue;
+    const entry = raw as RawSave;
+    result[key] = { seen: entry['seen'] === true, caught: readNumber(entry['caught'], 0) };
+  }
+  return result;
+}
+
 /**
  * Da salvataggio grezzo a stato tipizzato.
  *
@@ -83,10 +147,19 @@ export function readGameState(raw: RawSave): GameState {
       facing: readFacing(player['facing']),
     },
     world: { gameTimeMs: readNumber(world['gameTimeMs'], 0) },
+    party: Array.isArray(raw['party'])
+      ? raw['party']
+          .map(readCreature)
+          .filter((entry): entry is CreatureInstance => entry !== undefined)
+      : [],
+    archive: readArchive(raw['archive']),
+    inventory: readNumberMap(raw['inventory']),
     flags: readFlags(raw['flags']),
     stats: {
       playtimeMs: readNumber(stats['playtimeMs'], 0),
       zonesVisited: readStrings(stats['zonesVisited']),
+      battlesWon: readNumber(stats['battlesWon'], 0),
+      creaturesCaught: readNumber(stats['creaturesCaught'], 0),
     },
   };
 }

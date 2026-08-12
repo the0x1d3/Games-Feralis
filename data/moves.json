@@ -1,0 +1,105 @@
+{
+  "moves": [
+    {
+      "id": "colpo",
+      "nameKey": "move.colpo",
+      "type": "neutro",
+      "category": "physical",
+      "power": 45,
+      "accuracy": 0.95
+    },
+    {
+      "id": "morso",
+      "nameKey": "move.morso",
+      "type": "neutro",
+      "category": "physical",
+      "power": 58,
+      "accuracy": 0.9
+    },
+    {
+      "id": "favilla",
+      "nameKey": "move.favilla",
+      "type": "fuoco",
+      "category": "elemental",
+      "power": 48,
+      "accuracy": 0.95,
+      "inflicts": { "status": "burned", "chance": 0.2 }
+    },
+    {
+      "id": "vampata",
+      "nameKey": "move.vampata",
+      "type": "fuoco",
+      "category": "elemental",
+      "power": 72,
+      "accuracy": 0.85
+    },
+    {
+      "id": "spruzzo",
+      "nameKey": "move.spruzzo",
+      "type": "acqua",
+      "category": "elemental",
+      "power": 44,
+      "accuracy": 0.95,
+      "inflicts": { "status": "wet", "chance": 0.35 }
+    },
+    {
+      "id": "torrente",
+      "nameKey": "move.torrente",
+      "type": "acqua",
+      "category": "elemental",
+      "power": 72,
+      "accuracy": 0.85
+    },
+    {
+      "id": "rampicante",
+      "nameKey": "move.rampicante",
+      "type": "flora",
+      "category": "physical",
+      "power": 50,
+      "accuracy": 0.95,
+      "inflicts": { "status": "rooted", "chance": 0.25 }
+    },
+    {
+      "id": "spora",
+      "nameKey": "move.spora",
+      "type": "flora",
+      "category": "elemental",
+      "power": 34,
+      "accuracy": 0.9,
+      "inflicts": { "status": "stunned", "chance": 0.4 }
+    },
+    {
+      "id": "scossa",
+      "nameKey": "move.scossa",
+      "type": "fulmine",
+      "category": "elemental",
+      "power": 50,
+      "accuracy": 0.95,
+      "inflicts": { "status": "paralyzed", "chance": 0.25 }
+    },
+    {
+      "id": "raffica",
+      "nameKey": "move.raffica",
+      "type": "vento",
+      "category": "elemental",
+      "power": 46,
+      "accuracy": 1.0
+    },
+    {
+      "id": "sassata",
+      "nameKey": "move.sassata",
+      "type": "terra",
+      "category": "physical",
+      "power": 52,
+      "accuracy": 0.95
+    },
+    {
+      "id": "scossone",
+      "nameKey": "move.scossone",
+      "type": "terra",
+      "category": "physical",
+      "power": 76,
+      "accuracy": 0.8
+    }
+  ]
+}

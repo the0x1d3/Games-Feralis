@@ -19,6 +19,15 @@ import {
 
 export interface RngRuntime {
   stream(name: RngStreamName): Rng;
+  /**
+   * Riporta uno stream a una posizione nota.
+   *
+   * Serve al combattimento, che porta il proprio stato del RNG dentro lo stato
+   * dello scontro per restare riproducibile da un seme: a fine scontro la
+   * posizione raggiunta va restituita alla sessione, o le estrazioni fatte in
+   * battaglia si ripeterebbero fuori.
+   */
+  setState(name: RngStreamName, state: number): void;
   /** Lo stato corrente di tutti gli stream, pronto per il salvataggio. */
   snapshot(): RngStreamStates;
 }
@@ -35,6 +44,10 @@ export function createRngRuntime(states: RngStreamStates): RngRuntime {
       if (rng === undefined) throw new Error(`Stream RNG sconosciuto: "${name}"`);
       return rng;
     },
+    setState(name, state) {
+      streams.set(name, createRng(state));
+    },
+
     snapshot() {
       const result = {} as Record<RngStreamName, number>;
       for (const name of RNG_STREAM_NAMES) {

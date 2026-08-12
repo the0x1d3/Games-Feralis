@@ -1,0 +1,19 @@
+{
+  "id": "tide_fin",
+  "nameKey": "species.tide_fin",
+  "types": ["acqua"],
+  "baseStats": { "hp": 920, "att": 50, "dif": 54, "vel": 66, "ele": 66, "res": 58 },
+  "growthCurve": "medium",
+  "work": { "water": 2, "farming": 1 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "spruzzo", "level": 1 },
+    { "moveId": "raffica", "level": 6 },
+    { "moveId": "torrente", "level": 11 }
+  ],
+  "baseCatchRate": 1.0,
+  "rarity": "common",
+  "spawn": [{ "biome": "costa", "timeOfDay": "any", "weight": 45 }],
+  "size": "M",
+  "sprite": { "atlas": "creatures", "key": "tide_fin", "frame": 1 }
+}

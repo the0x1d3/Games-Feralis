@@ -139,6 +139,21 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      /*
+       * `const { status: _scarta, ...resto } = oggetto` è il modo tipizzato di
+       * togliere una chiave opzionale con `exactOptionalPropertyTypes`, dove
+       * assegnare `undefined` non è ammesso. Il prefisso `_` dichiara che la
+       * variabile esiste solo per essere scartata.
+       */
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          ignoreRestSiblings: true,
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/ban-ts-comment': [
         'error',
         {

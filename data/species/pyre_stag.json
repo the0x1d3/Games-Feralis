@@ -1,0 +1,19 @@
+{
+  "id": "pyre_stag",
+  "nameKey": "species.pyre_stag",
+  "types": ["fuoco", "terra"],
+  "baseStats": { "hp": 1060, "att": 74, "dif": 62, "vel": 58, "ele": 68, "res": 60 },
+  "growthCurve": "slow",
+  "work": { "flame": 3, "mining": 1 },
+  "movepool": [
+    { "moveId": "colpo", "level": 1 },
+    { "moveId": "favilla", "level": 1 },
+    { "moveId": "sassata", "level": 8 },
+    { "moveId": "vampata", "level": 15 }
+  ],
+  "baseCatchRate": 0.4,
+  "rarity": "rare",
+  "spawn": [{ "biome": "altopiano", "timeOfDay": "any", "weight": 8 }],
+  "size": "L",
+  "sprite": { "atlas": "creatures", "key": "pyre_stag", "frame": 7 }
+}

@@ -19,5 +19,13 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "scripts/**/*.ts"]
+  /*
+   * `src/domain` entra anche qui perché `balance-sim` gira in Node e usa le
+   * stesse funzioni del gioco. È possibile solo perché il dominio è puro: non
+   * tocca il DOM, quindi compila senza le librerie del browser. Se un giorno
+   * questo include cominciasse a dare errori di tipo, la causa sarebbe una
+   * violazione del confine dell'ADR 0001, non una configurazione da allargare.
+   */
+  "include": ["vite.config.ts", "scripts/**/*.ts", "src/domain/**/*.ts"],
+  "exclude": ["src/domain/**/*.test.ts"]
 }

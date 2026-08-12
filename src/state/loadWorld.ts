@@ -1,8 +1,10 @@
+import encounterData from '@data/world/encounters.json';
 import tilesData from '@data/world/tiles.json';
 import worldData from '@data/world/world.json';
 import { parseWorldConfig, type WorldConfig } from '@domain/world/config';
+import { parseEncounterConfig, type EncounterConfig } from '@domain/world/encounters';
 import { parseTileRules, parseZone } from '@domain/world/tiled';
-import type { Zone } from '@domain/world/zone';
+import type { TileRules, Zone } from '@domain/world/zone';
 
 /**
  * Caricamento del mondo, secondo l'ADR 0003: i dati piccoli e sempre
@@ -23,6 +25,8 @@ export const ZONE_IDS: readonly string[] = Object.keys(MAP_LOADERS);
 
 export interface LoadedWorld {
   readonly config: WorldConfig;
+  readonly encounters: EncounterConfig;
+  readonly tileRules: TileRules;
   readonly zones: ReadonlyMap<string, Zone>;
   /** Il JSON grezzo, che serve a Phaser per disegnare i layer. */
   readonly rawMaps: ReadonlyMap<string, unknown>;
@@ -30,6 +34,7 @@ export interface LoadedWorld {
 
 export async function loadWorld(): Promise<LoadedWorld> {
   const config = parseWorldConfig(worldData);
+  const encounters = parseEncounterConfig(encounterData);
   const rules = parseTileRules(tilesData);
 
   const zones = new Map<string, Zone>();
@@ -47,5 +52,5 @@ export async function loadWorld(): Promise<LoadedWorld> {
     zones.set(id, parseZone(raw, id, rules));
   }
 
-  return { config, zones, rawMaps };
+  return { config, encounters, tileRules: rules, zones, rawMaps };
 }
