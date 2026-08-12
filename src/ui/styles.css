@@ -49,24 +49,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100%;
-  padding: var(--space);
+  min-height: 100dvh;
 }
 
 /*
  * IL palcoscenico.
  *
  * Canvas e interfaccia sono due strati della stessa scatola, non due blocchi
- * impilati: la HUD sta *dentro* la schermata di gioco. La scatola prende tutta
- * la finestra fino a 1600px, restando 16:9.
+ * impilati: squadra, Radura, orologio e zaino stanno *dentro* la schermata di
+ * gioco. Fuori non c'è niente, perche' non c'e' niente che meriti di stare
+ * fuori.
+ *
+ * La larghezza e' il minimo fra la finestra e "l'altezza della finestra in
+ * 16:9": cosi' il palcoscenico e' sempre il piu' grande rettangolo 16:9 che ci
+ * sta, senza bande nere ai lati del canvas e senza barre di scorrimento.
  */
 .stage {
   position: relative;
-  width: min(100%, 1600px);
+  width: min(100vw, calc(100dvh * 16 / 9));
   aspect-ratio: 16 / 9;
-  max-height: calc(100dvh - 2 * var(--space));
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  max-height: 100dvh;
   overflow: hidden;
   background: #0d1411;
 }
